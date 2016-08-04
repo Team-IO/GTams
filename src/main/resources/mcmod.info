@@ -1,0 +1,16 @@
+[
+{
+  "modid": "${modid}",
+  "name": "${name}",
+  "description": "The Modding Trials Entry",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["founderio"],
+  "credits": "",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]
