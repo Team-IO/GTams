@@ -13,6 +13,7 @@ public class GTams {
 
 	@EventHandler
 	public void init(FMLInitializationEvent event) {
-		GTamsClient.authenticate();
+		GTamsClient gtamsClient = new GTamsClient(Config.server_host, Config.server_port);
+		gtamsClient.authenticate();
 	}
 }
