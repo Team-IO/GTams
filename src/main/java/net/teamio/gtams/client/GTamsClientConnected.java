@@ -201,4 +201,10 @@ public class GTamsClientConnected extends GTamsClient {
 		//TODO: what to do with not fully registered terminals? id == null!
 		doRequestPOST(Void.class, "/terminal_owner", new ETerminalOwner(tradeTerminal.id, newOwner.persistentID));
 	}
+
+	public TradeInfo getTradeInfo(TradeDescriptor tradeDescriptor) {
+		TradeInfo ti = doRequestPOST(TradeInfo.class, "/trade", tradeDescriptor);
+		ti.trade = tradeDescriptor;
+		return ti;
+	}
 }

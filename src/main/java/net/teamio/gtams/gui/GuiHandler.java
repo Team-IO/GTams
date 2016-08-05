@@ -22,7 +22,7 @@ public class GuiHandler implements IGuiHandler {
 		}
 		TileEntity te = world.getTileEntity(posCache.setPos(x, y, z));
 		if(te instanceof TraderTE) {
-			return new ContainerTraderTE((TraderTE) te);
+			return new ContainerTraderTE(player.inventory, (TraderTE) te);
 		}
 		return null;
 	}
@@ -34,7 +34,7 @@ public class GuiHandler implements IGuiHandler {
 		}
 		TileEntity te = world.getTileEntity(posCache.setPos(x, y, z));
 		if(te instanceof TraderTE) {
-			return new GuiTraderTE(new ContainerTraderTE((TraderTE) te));
+			return new GuiTraderTE(new ContainerTraderTE(player.inventory, (TraderTE) te));
 		}
 		return null;
 	}
