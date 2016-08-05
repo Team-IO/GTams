@@ -36,7 +36,7 @@ public class ContainerTraderTE extends Container {
 				ContainerTraderTE.this.trader.markDirty();
 			}
 		};
-		newTradeSlot = new Slot(fakeInventory, 0, 10, 10) {
+		newTradeSlot = new Slot(fakeInventory, 0, 10, 31) {
 			@Override
 			public void putStack(ItemStack stack) {
 				super.putStack(stack);
@@ -46,10 +46,16 @@ public class ContainerTraderTE extends Container {
 					requestTradeInfo(setStack);
 				}
 			}
+
+			@Override
+			public ItemStack decrStackSize(int amount) {
+				putStack(null);
+				return null;
+			}
 		};
 		addSlotToContainer(newTradeSlot);
 
-		int yOffset = 50;
+		int yOffset = 71;
 
         for (int l = 0; l < 3; ++l)
         {
