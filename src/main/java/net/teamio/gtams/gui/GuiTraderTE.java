@@ -8,6 +8,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraftforge.fml.client.GuiScrollingList;
+import net.teamio.gtams.client.Offer;
 
 public class GuiTraderTE extends GuiContainer {
 
@@ -53,7 +54,6 @@ public class GuiTraderTE extends GuiContainer {
 
 			@Override
 			protected void drawSlot(int slotIdx, int entryRight, int slotTop, int slotBuffer, Tessellator tess) {
-				System.out.println(slotTop);
 				if (container.offers == null) {
 					drawString(fontRendererObj, "Waiting for offer data", left, slotTop, 0xFF0000);
 				} else if (container.offers.isEmpty()) {

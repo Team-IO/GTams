@@ -4,26 +4,28 @@ import java.util.UUID;
 
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
-import net.teamio.gtams.client.GTamsClient;
+import net.teamio.gtams.GTams;
+import net.teamio.gtams.client.Owner;
 import net.teamio.gtams.client.TradeTerminal;
 
 public class TraderTE extends TileEntity {
 
-	private UUID owner;
+	private UUID ownerId;
 	private UUID terminalId;
-	private GTamsClient client;
+	private Owner owner;
 	private TradeTerminal terminal;
 
 	public TraderTE() {
 		// TODO Auto-generated constructor stub
 	}
 
-	public void setOwner(UUID owner) {
+	public void setOwner(UUID ownerId) {
 		if(worldObj.isRemote) {
 			return;
 		}
-		client = GTamsClient.forOwner(owner);
-		terminal.transferOwner(client);
+		this.ownerId = ownerId;
+		this.owner = GTams.gtamsClient.getOwner(ownerId);
+		terminal.transferOwner(owner);
 	}
 
 	@Override
@@ -31,16 +33,19 @@ public class TraderTE extends TileEntity {
 		if(worldObj.isRemote) {
 			return;
 		}
-		client = GTamsClient.forOwner(owner);
-		terminal = client.getTerminal(terminalId);
+		this.owner = GTams.gtamsClient.getOwner(ownerId);
+		terminal = owner.getTerminal(terminalId);
 	}
 
 	@Override
 	public void onChunkUnload() {
-		terminal.release();
+		if(worldObj.isRemote) {
+			return;
+		}
+		owner.terminalOffline(terminal);
+		terminalId = terminal.getId();
 		terminal = null;
-		client.release();
-		client = null;
+		owner = null;
 	}
 
 	@Override
@@ -49,10 +54,12 @@ public class TraderTE extends TileEntity {
 	}
 
 	public void onBlockBreak() {
-		client.destroyTerminal(terminal);
+		if(worldObj.isRemote) {
+			return;
+		}
+		owner.terminalDestroyed(terminal);
 		terminal = null;
-		client.release();
-		client = null;
+		owner = null;
 	}
 
 	public TradeTerminal getTerminal() {
@@ -78,7 +85,7 @@ public class TraderTE extends TileEntity {
 	@Override
 	public NBTTagCompound writeToNBT(NBTTagCompound compound) {
 		compound = super.writeToNBT(compound);
-		compound.setUniqueId("owner", owner);
+		compound.setUniqueId("owner", ownerId);
 		terminalId = terminal.getId();
 		compound.setUniqueId("terminal", terminalId);
 		return compound;
@@ -87,7 +94,7 @@ public class TraderTE extends TileEntity {
 	@Override
 	public void readFromNBT(NBTTagCompound compound) {
 		super.readFromNBT(compound);
-		owner = compound.getUniqueId("owner");
+		ownerId = compound.getUniqueId("owner");
 		terminalId = compound.getUniqueId("terminal");
 	}
 }

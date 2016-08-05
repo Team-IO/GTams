@@ -13,8 +13,9 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.common.registry.GameRegistry;
-import net.teamio.gtams.client.GTamsClient;
+import net.teamio.gtams.client.GTamsClientConnected;
 import net.teamio.gtams.content.TraderBlock;
+import net.teamio.gtams.content.TraderTE;
 import net.teamio.gtams.gui.GuiHandler;
 
 @Mod(modid = GTams.MODID, version = GTams.VERSION)
@@ -32,6 +33,7 @@ public class GTams {
 
 	public static TraderBlock blockTrader;
 	public static SimpleNetworkWrapper channel;
+	public static GTamsClientConnected gtamsClient;
 
 	@EventHandler
 	public void preInit(FMLPreInitializationEvent event) {
@@ -56,11 +58,13 @@ public class GTams {
 		itemTrader.setUnlocalizedName("gtams.trader");
 		itemTrader.setCreativeTab(creativeTab);
 		GameRegistry.register(itemTrader);
+
+		GameRegistry.registerTileEntity(TraderTE.class, "gtams.trader");
 	}
 
 	@EventHandler
 	public void init(FMLInitializationEvent event) {
-		GTamsClient gtamsClient = new GTamsClient(Config.server_host, Config.server_port);
+		gtamsClient = new GTamsClientConnected(Config.server_host, Config.server_port);
 		gtamsClient.authenticate();
 
 		NetworkRegistry.INSTANCE.registerGuiHandler(this, new GuiHandler());

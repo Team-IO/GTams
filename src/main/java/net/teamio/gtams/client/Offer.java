@@ -1,4 +1,4 @@
-package net.teamio.gtams.gui;
+package net.teamio.gtams.client;
 
 public class Offer {
 

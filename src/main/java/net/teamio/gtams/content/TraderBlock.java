@@ -50,4 +50,9 @@ public class TraderBlock extends Block {
 		te.setOwner(placer.getPersistentID());
 	}
 
+	@Override
+	public void breakBlock(World worldIn, BlockPos pos, IBlockState state) {
+		TraderTE te = (TraderTE) worldIn.getTileEntity(pos);
+		te.onBlockBreak();
+	}
 }

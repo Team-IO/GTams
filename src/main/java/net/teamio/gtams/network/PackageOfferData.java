@@ -9,8 +9,8 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import net.teamio.gtams.client.Offer;
 import net.teamio.gtams.gui.ContainerTraderTE;
-import net.teamio.gtams.gui.Offer;
 
 public class PackageOfferData implements IMessage {
 
