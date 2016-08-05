@@ -23,9 +23,15 @@ public class TraderTE extends TileEntity {
 		if(worldObj.isRemote) {
 			return;
 		}
-		this.ownerId = ownerId;
-		this.owner = GTams.gtamsClient.getOwner(ownerId);
-		terminal.transferOwner(owner);
+		if(ownerId != null) {
+			this.ownerId = ownerId;
+			this.owner = GTams.gtamsClient.getOwner(ownerId);
+			if(terminal == null) {
+				terminal = owner.getTerminal(terminalId);
+			} else {
+				terminal.transferOwner(owner);
+			}
+		}
 	}
 
 	@Override
@@ -33,8 +39,7 @@ public class TraderTE extends TileEntity {
 		if(worldObj.isRemote) {
 			return;
 		}
-		this.owner = GTams.gtamsClient.getOwner(ownerId);
-		terminal = owner.getTerminal(terminalId);
+		setOwner(ownerId);
 	}
 
 	@Override
@@ -42,10 +47,12 @@ public class TraderTE extends TileEntity {
 		if(worldObj.isRemote) {
 			return;
 		}
-		owner.terminalOffline(terminal);
-		terminalId = terminal.getId();
-		terminal = null;
-		owner = null;
+		if(ownerId != null) {
+			owner.terminalOffline(terminal);
+			terminalId = terminal.getId();
+			terminal = null;
+			owner = null;
+		}
 	}
 
 	@Override
@@ -86,8 +93,10 @@ public class TraderTE extends TileEntity {
 	public NBTTagCompound writeToNBT(NBTTagCompound compound) {
 		compound = super.writeToNBT(compound);
 		compound.setUniqueId("owner", ownerId);
-		terminalId = terminal.getId();
-		compound.setUniqueId("terminal", terminalId);
+		if(terminal != null) {
+			terminalId = terminal.getId();
+			compound.setUniqueId("terminal", terminalId);
+		}
 		return compound;
 	}
 
