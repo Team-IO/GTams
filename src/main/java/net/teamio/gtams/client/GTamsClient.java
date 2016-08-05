@@ -79,20 +79,20 @@ public class GTamsClient {
 
 	public static GTamsClient forOwner(UUID owner) {
 		// TODO Auto-generated method stub
-
+		return new GTamsClient("localhost", 20405);
 	}
 
 	private Map<UUID, TradeTerminal> terminalCache;
 
 	public TradeTerminal getTerminal(UUID terminalId) {
 		if(terminalId == null) {
-			TradeTerminal terminal = new TradeTerminal(null);
+			TradeTerminal terminal = new TradeTerminal(this, null);
 			registerNewTerminal(terminal);
 			return terminal;
 		}
 		TradeTerminal terminal = terminalCache.get(terminalId);
 		if(terminal == null) {
-			terminal = new TradeTerminal(terminalId);
+			terminal = new TradeTerminal(this, terminalId);
 			notifyTerminalOnline(terminal);
 		}
 		return terminal;

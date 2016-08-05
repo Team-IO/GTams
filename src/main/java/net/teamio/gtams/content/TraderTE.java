@@ -19,6 +19,9 @@ public class TraderTE extends TileEntity {
 	}
 
 	public void setOwner(UUID owner) {
+		if(worldObj.isRemote) {
+			return;
+		}
 		client = GTamsClient.forOwner(owner);
 		terminal.transferOwner(client);
 	}
@@ -50,6 +53,10 @@ public class TraderTE extends TileEntity {
 		terminal = null;
 		client.release();
 		client = null;
+	}
+
+	public TradeTerminal getTerminal() {
+		return terminal;
 	}
 
 	/*

@@ -1,19 +1,34 @@
 package net.teamio.gtams.gui;
 
+import java.util.List;
+
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
+import net.teamio.gtams.GTams;
+import net.teamio.gtams.content.TraderTE;
+import net.teamio.gtams.network.PackageOfferRequest;
 
 public class ContainerTraderTE extends Container {
 
-	public ContainerTraderTE() {
-		// TODO Auto-generated constructor stub
+	public final TraderTE trader;
+	public List<Offer> offers;
 
+	public ContainerTraderTE(TraderTE trader) {
+		this.trader = trader;
 	}
 
 	@Override
 	public boolean canInteractWith(EntityPlayer playerIn) {
 		// TODO Auto-generated method stub
-		return false;
+		return true;
+	}
+
+	public void setOffers(List<Offer> offers) {
+		this.offers = offers;
+	}
+
+	public void requestOffers() {
+		GTams.channel.sendToServer(new PackageOfferRequest());
 	}
 
 }
