@@ -10,6 +10,8 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.teamio.gtams.GTams;
+import net.teamio.gtams.client.Goods;
+import net.teamio.gtams.client.GoodsList;
 import net.teamio.gtams.client.Mode;
 import net.teamio.gtams.client.Trade;
 import net.teamio.gtams.client.TradeDescriptor;
@@ -27,7 +29,8 @@ public class PackageTradeData implements IMessage {
 			if(container instanceof ContainerTraderTE) {
 				ContainerTraderTE ctte = (ContainerTraderTE)container;
 				TradeList tl = GTams.gtamsClient.getTrades(ctte.trader.getTerminal());
-				response = new PackageTradeData(tl.trades);
+				GoodsList gl = GTams.gtamsClient.getGoods(ctte.trader.getTerminal());
+				response = new PackageTradeData(tl.trades, gl.goods);
 			} else {
 				response = new PackageTradeData();
 			}
@@ -43,7 +46,8 @@ public class PackageTradeData implements IMessage {
 			Container container = Minecraft.getMinecraft().thePlayer.openContainer;
 			if(container instanceof ContainerTraderTE) {
 
-				((ContainerTraderTE)container).setTrades(message.offers);
+				((ContainerTraderTE)container).setTrades(message.trades);
+				((ContainerTraderTE)container).setGoods(message.goods);
 			} else {
 				//TODO: Log
 				System.out.println("Wrong container open");
@@ -53,14 +57,23 @@ public class PackageTradeData implements IMessage {
 
 	}
 
-	public final ArrayList<Trade> offers;
+	public final ArrayList<Trade> trades;
+	public final ArrayList<Goods> goods;
 
 	public PackageTradeData() {
-		offers = new ArrayList<Trade>();
+		trades = new ArrayList<Trade>();
+		goods = new ArrayList<Goods>();
 	}
 
-	public PackageTradeData(ArrayList<Trade> offers) {
-		this.offers = offers;
+	public PackageTradeData(ArrayList<Trade> trades, ArrayList<Goods> goods) {
+		if(goods == null) {
+			goods = new ArrayList<Goods>();
+		}
+		if(trades == null) {
+			trades = new ArrayList<Trade>();
+		}
+		this.trades = trades;
+		this.goods = goods;
 	}
 
 	@Override
@@ -68,9 +81,9 @@ public class PackageTradeData implements IMessage {
 		PacketBuffer packetBuffer = new PacketBuffer(buf);
 
 		try {
-			offers.clear();
+			trades.clear();
 			int length = packetBuffer.readInt();
-			offers.ensureCapacity(length);
+			trades.ensureCapacity(length);
 			for (int i = 0; i < length; i++) {
 				Trade trade = new Trade();
 
@@ -87,7 +100,25 @@ public class PackageTradeData implements IMessage {
 				trade.stopAfter = packetBuffer.readInt();
 				trade.mode = packetBuffer.readEnumValue(Mode.class);
 
-				offers.add(trade);
+				trades.add(trade);
+			}
+			goods.clear();
+			length = packetBuffer.readInt();
+			goods.ensureCapacity(length);
+			for(int i = 0; i < length; i++) {
+				Goods g = new Goods();
+
+				boolean hasTradeDescriptor = packetBuffer.readBoolean();
+				if(hasTradeDescriptor) {
+					g.what = new TradeDescriptor();
+					g.what.itemName = packetBuffer.readStringFromBuffer(255);
+					g.what.damage = packetBuffer.readInt();
+					g.what.nbtHash = packetBuffer.readStringFromBuffer(255);
+				}
+				g.locked = packetBuffer.readInt();
+				g.unlocked = packetBuffer.readInt();
+
+				goods.add(g);
 			}
 		} catch (Exception e) {
 			// TODO: handle exception
@@ -101,8 +132,8 @@ public class PackageTradeData implements IMessage {
 		PacketBuffer packetBuffer = new PacketBuffer(buf);
 
 		try {
-			packetBuffer.writeInt(offers.size());
-			for(Trade off : offers) {
+			packetBuffer.writeInt(trades.size());
+			for(Trade off : trades) {
 				boolean hasTradeDescriptor = off.descriptor != null;
 
 				packetBuffer.writeBoolean(hasTradeDescriptor);
@@ -116,6 +147,19 @@ public class PackageTradeData implements IMessage {
 				packetBuffer.writeInt(off.interval);
 				packetBuffer.writeInt(off.stopAfter);
 				packetBuffer.writeEnumValue(off.mode);
+			}
+			packetBuffer.writeInt(goods.size());
+			for(Goods g : goods) {
+				boolean hasTradeDescriptor = g.what != null;
+
+				packetBuffer.writeBoolean(hasTradeDescriptor);
+				if(hasTradeDescriptor) {
+					packetBuffer.writeString(g.what.itemName);
+					packetBuffer.writeInt(g.what.damage);
+					packetBuffer.writeString(g.what.nbtHash);
+				}
+				packetBuffer.writeInt(g.locked);
+				packetBuffer.writeInt(g.unlocked);
 			}
 		} catch (Exception e) {
 			// TODO: handle exception

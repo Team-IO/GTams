@@ -8,6 +8,7 @@ public class Trade {
 	public int interval;
 	public int stopAfter;
 	public Mode mode = Mode.Once;
+	public int amount;
 
 	/**
 	 * @param itemName

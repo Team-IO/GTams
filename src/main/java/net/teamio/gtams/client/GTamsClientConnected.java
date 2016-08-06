@@ -27,6 +27,7 @@ import net.teamio.gtams.client.entities.EAuthenticate;
 import net.teamio.gtams.client.entities.ETerminalCreateNew;
 import net.teamio.gtams.client.entities.ETerminalCreateTrade;
 import net.teamio.gtams.client.entities.ETerminalData;
+import net.teamio.gtams.client.entities.ETerminalGoodsAdd;
 import net.teamio.gtams.client.entities.ETerminalOwner;
 
 public class GTamsClientConnected extends GTamsClient {
@@ -220,5 +221,16 @@ public class GTamsClientConnected extends GTamsClient {
 	public TradeList createTrade(TradeTerminal terminal, Trade trade) {
 		TradeList tl = doRequestPOST(TradeList.class, "/terminal_newtrade", new ETerminalCreateTrade(terminal.id, trade));
 		return tl;
+	}
+
+	@Override
+	public GoodsList getGoods(TradeTerminal terminal) {
+		GoodsList gl = doRequestPOST(GoodsList.class, "/terminal_goods", new ETerminalData(terminal.id, true));
+		return gl;
+	}
+
+	@Override
+	public void addGoods(TradeTerminal terminal, GoodsList gl) {
+		doRequestPOST(Void.class, "/terminal_goods_add", new ETerminalGoodsAdd(terminal.id, gl.goods));
 	}
 }

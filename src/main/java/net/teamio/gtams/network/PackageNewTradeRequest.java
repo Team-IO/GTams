@@ -7,6 +7,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.teamio.gtams.GTams;
+import net.teamio.gtams.client.GoodsList;
 import net.teamio.gtams.client.Mode;
 import net.teamio.gtams.client.Trade;
 import net.teamio.gtams.client.TradeDescriptor;
@@ -24,7 +25,8 @@ public class PackageNewTradeRequest implements IMessage {
 			if(container instanceof ContainerTraderTE) {
 				ContainerTraderTE ctte = (ContainerTraderTE)container;
 				TradeList tl = GTams.gtamsClient.createTrade(ctte.trader.getTerminal(), message.trade);
-				response = new PackageTradeData(tl.trades);
+				GoodsList gl = GTams.gtamsClient.getGoods(ctte.trader.getTerminal());
+				response = new PackageTradeData(tl.trades, gl.goods);
 			} else {
 				response = new PackageTradeData();
 			}
@@ -58,6 +60,7 @@ public class PackageNewTradeRequest implements IMessage {
 			}
 			trade.isBuy = packetBuffer.readBoolean();
 			trade.price = packetBuffer.readInt();
+			trade.amount = packetBuffer.readInt();
 			trade.interval = packetBuffer.readInt();
 			trade.stopAfter = packetBuffer.readInt();
 			trade.mode = packetBuffer.readEnumValue(Mode.class);
@@ -86,6 +89,7 @@ public class PackageNewTradeRequest implements IMessage {
 			}
 			packetBuffer.writeBoolean(trade.isBuy);
 			packetBuffer.writeInt(trade.price);
+			packetBuffer.writeInt(trade.amount);
 			packetBuffer.writeInt(trade.interval);
 			packetBuffer.writeInt(trade.stopAfter);
 			packetBuffer.writeEnumValue(trade.mode);

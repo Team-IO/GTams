@@ -9,7 +9,9 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
+import net.minecraftforge.items.SlotItemHandler;
 import net.teamio.gtams.GTams;
+import net.teamio.gtams.client.Goods;
 import net.teamio.gtams.client.Trade;
 import net.teamio.gtams.client.TradeDescriptor;
 import net.teamio.gtams.client.TradeInfo;
@@ -22,7 +24,9 @@ public class ContainerTraderTE extends Container {
 
 	public final TraderTE trader;
 	private List<Trade> trades;
+	private ArrayList<Goods> goods;
 	private ArrayList<ItemStack> tradeStacks;
+	private ArrayList<ItemStack> goodsStacks;
 	private final Slot newTradeSlot;
 	TradeInfo tradeInfo;
 
@@ -55,6 +59,13 @@ public class ContainerTraderTE extends Container {
 			}
 		};
 		addSlotToContainer(newTradeSlot);
+
+		for(int r = 0; r < 3; r++) {
+			for(int c = 0; c < 4; c++) {
+				SlotItemHandler sih = new SlotItemHandler(trader.itemHandler, r * 4 + c, 175 + c * 18, 196 + r * 18);
+				this.addSlotToContainer(sih);
+			}
+		}
 
 		int yOffset = 71;
 
@@ -97,6 +108,14 @@ public class ContainerTraderTE extends Container {
 		return trades;
 	}
 
+	public ArrayList<Goods> getGoods() {
+		return goods;
+	}
+
+	public ArrayList<ItemStack> getGoodsStacks() {
+		return goodsStacks;
+	}
+
 	public List<ItemStack> getTradeStacks() {
 		return tradeStacks;
 	}
@@ -116,6 +135,24 @@ public class ContainerTraderTE extends Container {
 
 	public void setTradeInfo(TradeInfo info) {
 		this.tradeInfo = info;
+	}
+
+	public void setGoods(ArrayList<Goods> goods) {
+		this.goods = goods;
+		goodsStacks = new ArrayList<ItemStack>();
+		goodsStacks.ensureCapacity(trades.size());
+
+		for(int i = 0; i < goods.size(); i++) {
+			Goods g = goods.get(i);
+			TradeDescriptor td = g.what;
+			if(td == null) {
+				goodsStacks.add(null);
+			} else {
+				ItemStack stack = td.toItemStack();
+				stack.stackSize = g.locked + g.unlocked;
+				goodsStacks.add(stack);
+			}
+		}
 	}
 
 }

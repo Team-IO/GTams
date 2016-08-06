@@ -18,6 +18,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.client.GuiScrollingList;
 import net.minecraftforge.fml.client.config.GuiCheckBox;
+import net.teamio.gtams.client.Goods;
 import net.teamio.gtams.client.Mode;
 import net.teamio.gtams.client.Trade;
 import net.teamio.gtams.client.TradeDescriptor;
@@ -171,8 +172,10 @@ public class GuiTraderTE extends GuiContainer {
 	private Mode mode = Mode.Once;
 	private boolean isBuy;
 	private int price;
+	private int amount = 1;
 	private int interval = 1;
 	private int stopAfter = 0;
+	private NumericField txtAmount;
 
 	public GuiTraderTE(ContainerTraderTE conta) {
 		super(conta);
@@ -224,6 +227,14 @@ public class GuiTraderTE extends GuiContainer {
 			}
 		};
 		txtPrice.setMaxStringLength(5);
+
+		txtAmount = new NumericField(TXT_PRICE, fontRendererObj, guiLeft + 75, guiTop + 126, 40, 10) {
+			@Override
+			protected void onTextChanged(String text) {
+				updateVisibility();
+			}
+		};
+		txtAmount.setMaxStringLength(5);
 		btnCreateTrade = new GuiButton(BTN_CREATETRADE, guiLeft + 166, guiTop + 30, 80, 20, "Create Trade");
 		buttonList.add(btnCreateTrade);
 
@@ -258,6 +269,7 @@ public class GuiTraderTE extends GuiContainer {
 		txtStopAfter.setMaxStringLength(3);
 
 		textFields.add(txtPrice);
+		textFields.add(txtAmount);
 		textFields.add(txtInterval);
 		textFields.add(txtStopAfter);
 
@@ -266,7 +278,9 @@ public class GuiTraderTE extends GuiContainer {
 		buttonList.add(cbModeInfinite);
 
 		txtPrice.setText(Integer.toString(price));
+		txtAmount.setText(Integer.toString(amount));
 		txtInterval.setText(Integer.toString(interval));
+		txtStopAfter.setText(Integer.toString(stopAfter));
 
 		updateVisibility();
 	}
@@ -322,6 +336,7 @@ public class GuiTraderTE extends GuiContainer {
 			newTrade.mode = mode;
 			newTrade.interval = interval;
 			newTrade.stopAfter = stopAfter;
+			newTrade.amount = amount;
 
 			container.requestCreateTrade(newTrade);
 			isEditingTrade = false;
@@ -345,6 +360,7 @@ public class GuiTraderTE extends GuiContainer {
 
 		availableOffers.visible = !isEditingTrade;
 		txtPrice.setVisible(isEditingTrade);
+		txtAmount.setVisible(isEditingTrade);
 
 		txtInterval.setVisible(isEditingTrade && mode == Mode.Recurring);
 		txtStopAfter.setVisible(isEditingTrade && mode == Mode.Recurring);
@@ -366,10 +382,11 @@ public class GuiTraderTE extends GuiContainer {
 
 		isBuy = cbBuy.isChecked();
 		this.price = txtPrice.getIntValue();
+		this.amount = txtAmount.getIntValue();
 		this.interval = txtInterval.getIntValue();
 		this.stopAfter = txtStopAfter.getIntValue();
 
-		btnCreateTrade.enabled = this.price > 0 && (mode != Mode.Recurring || interval > 0) && tradeStack != null;
+		btnCreateTrade.enabled = this.price > 0 && (mode != Mode.Recurring || interval > 0) && tradeStack != null && amount > 0;
 	}
 
 	@Override
@@ -389,12 +406,13 @@ public class GuiTraderTE extends GuiContainer {
 
 	@Override
 	protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
+		int offsetX = 10;
+		int offsetY = 30;
 		if(isEditingTrade) {
+
 			if(tradeStack != null) {
 				TradeInfo tradeInfo = container.tradeInfo;
 
-				int offsetX = 10;
-				int offsetY = 30;
 
 				RenderHelper.enableGUIStandardItemLighting();
 				GlStateManager.enableDepth();
@@ -414,9 +432,27 @@ public class GuiTraderTE extends GuiContainer {
 					drawString(fontRendererObj, "Mean Price: " + Float.toString(Math.round(tradeInfo.meanPrice * 100) / 100f), offsetX, offsetY + 62, 0xFFFFFF);
 				}
 			}
-			drawTextFieldLabel(txtPrice, "for");
+			drawTextFieldLabel(txtPrice, "Price");
+			drawTextFieldLabel(txtAmount, "Amount");
 			drawTextFieldLabel(txtInterval, "Every", "seconds");
 			drawTextFieldLabel(txtStopAfter, "Stop after", "transactions");
+		}
+		offsetX = 175;
+		offsetY = 174;
+
+		List<Goods> goods = container.getGoods();
+		List<ItemStack> goodsStacks = container.getGoodsStacks();
+		if(goods == null) {
+			drawString(fontRendererObj, "Requesting Goods Information...", offsetX, offsetY, 0xFFFF00);
+		} else {
+			RenderHelper.enableGUIStandardItemLighting();
+			GlStateManager.enableDepth();
+			for(int i = 0; i < goods.size(); i++) {
+				ItemStack goodsStack = goodsStacks.get(i);
+				itemRender.renderItemAndEffectIntoGUI(mc.thePlayer, goodsStack, offsetX + i*18, offsetY);
+				itemRender.renderItemOverlayIntoGUI(fontRendererObj, goodsStack, offsetX + i*18, offsetY, null);
+			}
+			RenderHelper.disableStandardItemLighting();
 		}
 	}
 
