@@ -33,7 +33,7 @@ import net.teamio.gtams.client.entities.ETerminalOwner;
 public class GTamsClientConnected extends GTamsClient {
 
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws GTamsException {
 		// Client test
 
 		new GTamsClientConnected("localhost", 20405).authenticate();
@@ -55,13 +55,13 @@ public class GTamsClientConnected extends GTamsClient {
 		gson = new GsonBuilder().serializeNulls().setPrettyPrinting().create();
 	}
 
-	private void checkConnection() {
+	private void checkConnection() throws GTamsException {
 		if(clientConnection == null || !clientConnection.isOpen() || clientConnection.isStale()) {
 			connect();
 		}
 	}
 
-	private void connect() {
+	private void connect() throws GTamsException {
 		if(clientConnection != null) {
 			try {
 				clientConnection.shutdown();
@@ -76,11 +76,9 @@ public class GTamsClientConnected extends GTamsClient {
 			socket = new Socket(host, port);
 			newConnection.bind(socket);
 		} catch (UnknownHostException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new GTamsException("Error connecting to GTams Server", e);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new GTamsException("Error connecting to GTams Server", e);
 		}
 
 
@@ -91,7 +89,7 @@ public class GTamsClientConnected extends GTamsClient {
 		clientConnection = newConnection;
 	}
 
-	private <T> T doRequestGET(Class<T> responseEntity, String endpoint) {
+	private <T> T doRequestGET(Class<T> responseEntity, String endpoint) throws GTamsException {
 		checkConnection();
 		BasicHttpRequest request = new BasicHttpRequest("GET", endpoint);
 		try {
@@ -109,16 +107,15 @@ public class GTamsClientConnected extends GTamsClient {
 			System.out.println("Response from server: " + responseString);
 			return gson.fromJson(responseString, responseEntity);
 		} catch (HttpException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new GTamsException("Error processing HTTP response", e);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new GTamsException("Network error when contacting server", e);
+		} catch (Exception e) {
+			throw new GTamsException("Error processing answer from server", e);
 		}
-		return null;
 	}
 
-	private <T> T doRequestPOST(Class<T> responseEntity, String endpoint, Object postData) {
+	private <T> T doRequestPOST(Class<T> responseEntity, String endpoint, Object postData) throws GTamsException {
 		checkConnection();
 		BasicHttpEntityEnclosingRequest request = new BasicHttpEntityEnclosingRequest("POST", endpoint);
 
@@ -140,16 +137,15 @@ public class GTamsClientConnected extends GTamsClient {
 			System.out.println("Response from server: " + responseString);
 			return gson.fromJson(responseString, responseEntity);
 		} catch (HttpException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new GTamsException("Error processing HTTP response", e);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new GTamsException("Network error when contacting server", e);
+		} catch (Exception e) {
+			throw new GTamsException("Error processing answer from server", e);
 		}
-		return null;
 	}
 
-	public void authenticate() {
+	public void authenticate() throws GTamsException {
 		if(Config.client_token == null) {
 
 			EAuthenticate ent = doRequestGET(EAuthenticate.class, "/authenticate");
@@ -160,24 +156,40 @@ public class GTamsClientConnected extends GTamsClient {
 	@Override
 	public void notifyTerminalOnline(TradeTerminal terminal) {
 		if(terminal.id != null) {
-			doRequestPOST(Void.class, "/terminal_status", new ETerminalData(terminal.id, true));
+			try {
+				doRequestPOST(Void.class, "/terminal_status", new ETerminalData(terminal.id, true));
+			} catch (GTamsException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	}
 
 	@Override
 	public void notifyTerminalOffline(TradeTerminal terminal) {
 		if(terminal.id != null) {
-			doRequestPOST(Void.class, "/terminal_status", new ETerminalData(terminal.id, false));
+			try {
+				doRequestPOST(Void.class, "/terminal_status", new ETerminalData(terminal.id, false));
+			} catch (GTamsException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	}
 
 	@Override
 	public void registerNewTerminal(TradeTerminal terminal) {
 		synchronized (sync_object) {
-			ETerminalData ent = doRequestPOST(ETerminalData.class, "/newterminal", new ETerminalCreateNew(terminal.owner.persistentID));
-			terminal.id = ent.id;
-			if(!terminal.isOnline) {
-				destroyTerminal(terminal);
+			ETerminalData ent;
+			try {
+				ent = doRequestPOST(ETerminalData.class, "/newterminal", new ETerminalCreateNew(terminal.owner.persistentID));
+				terminal.id = ent.id;
+				if(!terminal.isOnline) {
+					destroyTerminal(terminal);
+				}
+			} catch (GTamsException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 		}
 	}
@@ -185,52 +197,101 @@ public class GTamsClientConnected extends GTamsClient {
 	@Override
 	public void destroyTerminal(TradeTerminal terminal) {
 		synchronized (sync_object) {
-			doRequestPOST(Void.class, "/destroyterminal", new ETerminalData(terminal.id, false));
+			try {
+				doRequestPOST(Void.class, "/destroyterminal", new ETerminalData(terminal.id, false));
+			} catch (GTamsException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	}
 
 	@Override
 	public void notifyClientOffline(Owner owner) {
-		doRequestPOST(Void.class, "/player_status", new ETerminalData(owner.persistentID, false));
+		try {
+			doRequestPOST(Void.class, "/player_status", new ETerminalData(owner.persistentID, false));
+		} catch (GTamsException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	@Override
 	public void notifyClientOnline(Owner owner) {
-		doRequestPOST(Void.class, "/player_status", new ETerminalData(owner.persistentID, true));
+		try {
+			doRequestPOST(Void.class, "/player_status", new ETerminalData(owner.persistentID, true));
+		} catch (GTamsException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	@Override
 	public void changeTerminalOwner(TradeTerminal tradeTerminal, Owner newOwner) {
 		//TODO: what to do with not fully registered terminals? id == null!
-		doRequestPOST(Void.class, "/terminal_owner", new ETerminalOwner(tradeTerminal.id, newOwner.persistentID));
+		try {
+			doRequestPOST(Void.class, "/terminal_owner", new ETerminalOwner(tradeTerminal.id, newOwner.persistentID));
+		} catch (GTamsException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	public TradeInfo getTradeInfo(TradeDescriptor tradeDescriptor) {
-		TradeInfo ti = doRequestPOST(TradeInfo.class, "/trade", tradeDescriptor);
-		ti.trade = tradeDescriptor;
+		TradeInfo ti = null;
+		try {
+			ti = doRequestPOST(TradeInfo.class, "/trade", tradeDescriptor);
+			ti.trade = tradeDescriptor;
+		} catch (GTamsException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		return ti;
 	}
 
 	@Override
 	public TradeList getTrades(TradeTerminal terminal) {
-		TradeList tl = doRequestPOST(TradeList.class, "/terminal_trades", new ETerminalData(terminal.id, true));
+		TradeList tl = null;
+		try {
+			tl = doRequestPOST(TradeList.class, "/terminal_trades", new ETerminalData(terminal.id, true));
+		} catch (GTamsException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		return tl;
 	}
 
 	@Override
 	public TradeList createTrade(TradeTerminal terminal, Trade trade) {
-		TradeList tl = doRequestPOST(TradeList.class, "/terminal_newtrade", new ETerminalCreateTrade(terminal.id, trade));
+		TradeList tl = null;
+		try {
+			tl = doRequestPOST(TradeList.class, "/terminal_newtrade", new ETerminalCreateTrade(terminal.id, trade));
+		} catch (GTamsException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		return tl;
 	}
 
 	@Override
 	public GoodsList getGoods(TradeTerminal terminal) {
-		GoodsList gl = doRequestPOST(GoodsList.class, "/terminal_goods", new ETerminalData(terminal.id, true));
+		GoodsList gl = null;
+		try {
+			gl = doRequestPOST(GoodsList.class, "/terminal_goods", new ETerminalData(terminal.id, true));
+		} catch (GTamsException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		return gl;
 	}
 
 	@Override
 	public void addGoods(TradeTerminal terminal, GoodsList gl) {
-		doRequestPOST(Void.class, "/terminal_goods_add", new ETerminalGoodsAdd(terminal.id, gl.goods));
+		try {
+			doRequestPOST(Void.class, "/terminal_goods_add", new ETerminalGoodsAdd(terminal.id, gl.goods));
+		} catch (GTamsException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }

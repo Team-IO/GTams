@@ -30,13 +30,16 @@ public class PackageTradeData implements IMessage {
 				ContainerTraderTE ctte = (ContainerTraderTE)container;
 				TradeList tl = GTams.gtamsClient.getTrades(ctte.trader.getTerminal());
 				GoodsList gl = GTams.gtamsClient.getGoods(ctte.trader.getTerminal());
-				response = new PackageTradeData(tl.trades, gl.goods);
+				if(tl == null || gl == null) {
+					//TODO: what to do?
+				} else {
+					return new PackageTradeData(tl.trades, gl.goods);
+				}
 			} else {
-				response = new PackageTradeData();
+				return new PackageTradeData();
 			}
-			return response;
+			return null;
 		}
-
 	}
 
 	public static final class HandlerClient implements IMessageHandler<PackageTradeData, IMessage> {

@@ -122,8 +122,8 @@ public class TraderTE extends TileEntity implements ITickable {
 				TradeList tl = GTams.gtamsClient.getTrades(terminal);
 				GoodsList gl = GTams.gtamsClient.getGoods(terminal);
 
-				if(tl.trades == null ||
-						tl.trades.isEmpty()) {
+				if(tl == null || gl == null ||
+						tl.trades == null || tl.trades.isEmpty()) {
 					return;
 				}
 

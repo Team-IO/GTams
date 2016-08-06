@@ -14,6 +14,7 @@ import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.teamio.gtams.client.GTamsClientConnected;
+import net.teamio.gtams.client.GTamsException;
 import net.teamio.gtams.content.TraderBlock;
 import net.teamio.gtams.content.TraderTE;
 import net.teamio.gtams.gui.GuiHandler;
@@ -65,7 +66,12 @@ public class GTams {
 	@EventHandler
 	public void init(FMLInitializationEvent event) {
 		gtamsClient = new GTamsClientConnected(Config.server_host, Config.server_port);
-		gtamsClient.authenticate();
+		try {
+			gtamsClient.authenticate();
+		} catch (GTamsException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 		NetworkRegistry.INSTANCE.registerGuiHandler(this, new GuiHandler());
 		channel = NetworkRegistry.INSTANCE.newSimpleChannel(CHANNEL_NAME);

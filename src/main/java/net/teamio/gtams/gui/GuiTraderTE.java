@@ -8,6 +8,7 @@ import org.lwjgl.input.Mouse;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.gui.inventory.GuiContainer;
@@ -134,6 +135,7 @@ public class GuiTraderTE extends GuiContainer {
 
 	public static ResourceLocation debug_gui = new ResourceLocation("gtams", "textures/gui/debug_gui.png");
 	public static ResourceLocation debug_gui_settings = new ResourceLocation("gtams", "textures/gui/debug_gui_settings.png");
+	public static ResourceLocation minecoin = new ResourceLocation("gtams", "textures/gui/minecoin.png");
 
 	private static final int TXT_PRICE = 4001;
 	private static final int TXT_INTERVAL = 4002;
@@ -397,9 +399,13 @@ public class GuiTraderTE extends GuiContainer {
 			mc.renderEngine.bindTexture(debug_gui);
 		}
 		drawTexturedModalRect(this.width / 2 - 128, this.height / 2 - 128, 0, 0, 256, 256);
+
 		//TODO: Translate
 		drawString(fontRendererObj, "Inventory", guiLeft + 8, guiTop + 162, 0xFFFFFF);
-		if(!isEditingTrade) {
+		if(isEditingTrade) {
+			mc.renderEngine.bindTexture(minecoin);
+			Gui.drawModalRectWithCustomSizedTexture(txtPrice.xPosition + txtPrice.width + 3, txtPrice.yPosition + 1, 0, 0, 8, 8, 8, 8);
+		} else {
 			drawString(fontRendererObj, "Active Trades:", guiLeft + 8, guiTop + 16, 0xFFFFFF);
 		}
 	}
