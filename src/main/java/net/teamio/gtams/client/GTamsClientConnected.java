@@ -24,6 +24,7 @@ import com.google.gson.GsonBuilder;
 
 import net.teamio.gtams.Config;
 import net.teamio.gtams.client.entities.EAuthenticate;
+import net.teamio.gtams.client.entities.ETerminalCreateNew;
 import net.teamio.gtams.client.entities.ETerminalCreateTrade;
 import net.teamio.gtams.client.entities.ETerminalData;
 import net.teamio.gtams.client.entities.ETerminalOwner;
@@ -172,7 +173,7 @@ public class GTamsClientConnected extends GTamsClient {
 	@Override
 	public void registerNewTerminal(TradeTerminal terminal) {
 		synchronized (sync_object) {
-			ETerminalData ent = doRequestGET(ETerminalData.class, "/newterminal");
+			ETerminalData ent = doRequestPOST(ETerminalData.class, "/newterminal", new ETerminalCreateNew(terminal.owner.persistentID));
 			terminal.id = ent.id;
 			if(!terminal.isOnline) {
 				destroyTerminal(terminal);

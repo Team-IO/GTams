@@ -49,7 +49,7 @@ public class TraderTE extends TileEntity {
 		}
 		if(ownerId != null) {
 			owner.terminalOffline(terminal);
-			terminalId = terminal.getId();
+			terminalId = terminal.id;
 			terminal = null;
 			owner = null;
 		}
@@ -94,7 +94,7 @@ public class TraderTE extends TileEntity {
 		compound = super.writeToNBT(compound);
 		compound.setUniqueId("owner", ownerId);
 		if(terminal != null) {
-			terminalId = terminal.getId();
+			terminalId = terminal.id;
 			compound.setUniqueId("terminal", terminalId);
 		}
 		return compound;

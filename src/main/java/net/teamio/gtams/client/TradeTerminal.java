@@ -5,7 +5,7 @@ import java.util.UUID;
 public class TradeTerminal {
 
 	public UUID id;
-	private Owner owner;
+	public Owner owner;
 	/**
 	 * Status only used for shutting down terminals that are not fully register
 	 * yet, so they will be discarded after registration.
@@ -16,10 +16,6 @@ public class TradeTerminal {
 		this.id = id;
 		this.owner = owner;
 		this.isOnline = true;
-	}
-
-	public UUID getId() {
-		return id;
 	}
 
 	public void transferOwner(Owner newOwner) {
