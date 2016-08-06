@@ -11,13 +11,18 @@ import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.gui.inventory.GuiContainer;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.client.GuiScrollingList;
 import net.minecraftforge.fml.client.config.GuiCheckBox;
-import net.teamio.gtams.client.Offer;
+import net.teamio.gtams.client.Mode;
+import net.teamio.gtams.client.Trade;
 import net.teamio.gtams.client.TradeDescriptor;
 import net.teamio.gtams.client.TradeInfo;
+import net.teamio.gtams.gui.ContainerTraderTE.SlotChangeListener;
 
 public class GuiTraderTE extends GuiContainer {
 
@@ -53,15 +58,17 @@ public class GuiTraderTE extends GuiContainer {
 			onTextChanged(getText());
 		}
 
+		public int getIntValue() {
+			String txt = getText();
+			if(txt.isEmpty()) {
+				return 0;
+			}
+			return Integer.parseInt(txt);
+		}
+
 		protected void onTextChanged(String text) {
 		}
 	}
-	public enum Mode {
-		Once,
-		Recurring,
-		Infinite
-	}
-
 	private final class OfferList extends GuiScrollingList {
 		int selected = -1;
 		public boolean visible = true;
@@ -78,7 +85,8 @@ public class GuiTraderTE extends GuiContainer {
 
 		@Override
 		protected int getSize() {
-			return container.offers == null || container.offers.isEmpty() ? 100 : container.offers.size();
+			List<Trade> offers = container.getTrades();
+			return offers == null || offers.isEmpty() ? 1 : offers.size();
 		}
 
 		@Override
@@ -88,15 +96,33 @@ public class GuiTraderTE extends GuiContainer {
 
 		@Override
 		protected void drawSlot(int slotIdx, int entryRight, int slotTop, int slotBuffer, Tessellator tess) {
-			if (container.offers == null) {
-				drawString(fontRendererObj, "Waiting for offer data", left, slotTop, 0xFF0000);
-			} else if (container.offers.isEmpty()) {
-				drawString(fontRendererObj, "No Offers Available", left, slotTop, 0xFFFF00);
+			List<Trade> offers = container.getTrades();
+			List<ItemStack> offerStacks = container.getTradeStacks();
+			if (offers == null) {
+				drawString(fontRendererObj, "Waiting for trade data", left, slotTop, 0xFF0000);
+			} else if (offers.isEmpty()) {
+				drawString(fontRendererObj, "No Active Trades", left, slotTop, 0xFFFF00);
 			} else {
-
-				Offer offer = container.offers.get(slotIdx);
-				drawString(fontRendererObj, offer.itemName + ":" + Integer.toString(offer.damage), left, slotTop, 0xFFFFFF);
-				drawString(fontRendererObj, "Some text here", left, slotTop + 20, 0xFFFFFF);
+				Trade offer = offers.get(slotIdx);
+				ItemStack itemStack = offerStacks.get(slotIdx);
+				if (itemStack != null) {
+					RenderHelper.enableGUIStandardItemLighting();
+					GlStateManager.enableDepth();
+					itemRender.renderItemAndEffectIntoGUI(mc.thePlayer, itemStack, left, slotTop);
+					itemRender.renderItemOverlayIntoGUI(fontRendererObj, itemStack, left, slotTop, null);
+					RenderHelper.disableStandardItemLighting();
+				}
+				if(offer.descriptor == null) {
+					drawString(fontRendererObj, "Invalid Data", left + 16, slotTop, 0xFFFF00);
+				} else {
+					if (itemStack == null) {
+						drawString(fontRendererObj, "Invalid Data", left + 16, slotTop, 0xFFFF00);
+					} else {
+						drawString(fontRendererObj, itemStack.getDisplayName(), left + 16, slotTop, 0xFFFFFF);
+					}
+					drawString(fontRendererObj, offer.descriptor.toString(), left + 16, slotTop + 10, 0xFFFFFF);
+				}
+				drawString(fontRendererObj, "Some text here", left + 16, slotTop + 20, 0xFFFFFF);
 			}
 		}
 
@@ -132,23 +158,37 @@ public class GuiTraderTE extends GuiContainer {
 	private boolean isEditingTrade = false;
 
 	private GuiButton btnCreateTrade;
-	private GuiTextField txtPrice;
-	private GuiTextField txtInterval;
-	private GuiTextField txtStopAfter;
+	private NumericField txtPrice;
+	private NumericField txtInterval;
+	private NumericField txtStopAfter;
 	private GuiCheckBox cbBuy;
 	private GuiCheckBox cbSell;
 	private GuiCheckBox cbModeOnce;
 	private GuiCheckBox cbModeRecurring;
 	private GuiCheckBox cbModeInfinite;
 
+	private ItemStack tradeStack;
 	private Mode mode = Mode.Once;
 	private boolean isBuy;
 	private int price;
 	private int interval = 1;
+	private int stopAfter = 0;
 
-	public GuiTraderTE(ContainerTraderTE container) {
-		super(container);
-		this.container = container;
+	public GuiTraderTE(ContainerTraderTE conta) {
+		super(conta);
+		this.container = conta;
+		container.onSlotChange = new SlotChangeListener() {
+
+			@Override
+			public void slotChanged(ItemStack newStack) {
+				tradeStack = newStack;
+				if(tradeStack != null) {
+					tradeStack.stackSize = 1;
+					container.requestTradeInfo(tradeStack);
+				}
+				updateVisibility();
+			}
+		};
 		setGuiSize(256, 256);
 	}
 
@@ -160,7 +200,7 @@ public class GuiTraderTE extends GuiContainer {
 		this.ySize = 256;
 		super.initGui();
 
-		container.requestOffers();
+		container.requestTrades();
 
 		int listWidth = this.xSize - 16;
 		int listHeight = 129;
@@ -195,7 +235,6 @@ public class GuiTraderTE extends GuiContainer {
 
 		int modeTop = 95;
 		int modeLeft = 150;
-		int modeWidth = 70;
 		cbModeOnce = new GuiCheckBox(BTN_MODE_ONCE, guiLeft + modeLeft, guiTop + modeTop, "One-Time", true);
 		cbModeRecurring = new GuiCheckBox(BTN_MODE_RECURRING, guiLeft + modeLeft, guiTop + modeTop + 10, "Recurring", false);
 		cbModeInfinite = new GuiCheckBox(BTN_MODE_INFINITE, guiLeft + modeLeft, guiTop + modeTop + 20, "Infinite", false);
@@ -244,7 +283,7 @@ public class GuiTraderTE extends GuiContainer {
 			System.out.println("New Trade");
 			isEditingTrade = true;
 
-			container.newTradeSlot.putStack(null);
+			tradeStack = null;
 			container.tradeInfo = null;
 
 		}
@@ -252,7 +291,7 @@ public class GuiTraderTE extends GuiContainer {
 			System.out.println("Cancel New Trade");
 			isEditingTrade = false;
 
-			container.newTradeSlot.putStack(null);
+			tradeStack = null;
 			container.tradeInfo = null;
 		}
 
@@ -272,6 +311,22 @@ public class GuiTraderTE extends GuiContainer {
 		}
 		if(button.id == BTN_MODE_INFINITE) {
 			mode = Mode.Infinite;
+		}
+		if(button.id == BTN_CREATETRADE) {
+			Trade newTrade = new Trade();
+
+			newTrade.descriptor = new TradeDescriptor(tradeStack);
+
+			newTrade.isBuy = isBuy;
+			newTrade.price = price;
+			newTrade.mode = mode;
+			newTrade.interval = interval;
+			newTrade.stopAfter = stopAfter;
+
+			container.requestCreateTrade(newTrade);
+			isEditingTrade = false;
+
+			tradeStack = null;
 		}
 
 		updateVisibility();
@@ -299,37 +354,23 @@ public class GuiTraderTE extends GuiContainer {
 		cbSell.enabled = isEditingTrade;
 		cbSell.visible = isEditingTrade;
 
-		cbModeOnce.enabled = isEditingTrade;
+		cbModeOnce.enabled = isEditingTrade && mode != Mode.Once;
 		cbModeOnce.visible = isEditingTrade;
-		cbModeRecurring.enabled = isEditingTrade;
+		cbModeOnce.setIsChecked(!cbModeOnce.enabled);
+		cbModeRecurring.enabled = isEditingTrade && mode != Mode.Recurring;
 		cbModeRecurring.visible = isEditingTrade;
-		cbModeInfinite.enabled = isEditingTrade;
+		cbModeRecurring.setIsChecked(!cbModeRecurring.enabled);
+		cbModeInfinite.enabled = isEditingTrade && mode != Mode.Infinite;
 		cbModeInfinite.visible = isEditingTrade;
-
-		String priceText = txtPrice.getText();
-		if(priceText.isEmpty()) {
-			this.price = 0;
-		} else {
-			this.price = Integer.parseInt(priceText);
-		}
-		String intervalText = txtInterval.getText();
-		if(intervalText.isEmpty()) {
-			this.interval = 0;
-		} else {
-			this.interval = Integer.parseInt(intervalText);
-		}
-		btnCreateTrade.enabled = this.price > 0 && interval > 0;
+		cbModeInfinite.setIsChecked(!cbModeInfinite.enabled);
 
 		isBuy = cbBuy.isChecked();
+		this.price = txtPrice.getIntValue();
+		this.interval = txtInterval.getIntValue();
+		this.stopAfter = txtStopAfter.getIntValue();
 
-		cbModeOnce.enabled = mode != Mode.Once;
-		cbModeOnce.setIsChecked(!cbModeOnce.enabled);
-		cbModeRecurring.enabled = mode != Mode.Recurring;
-		cbModeRecurring.setIsChecked(!cbModeRecurring.enabled);
-		cbModeInfinite.enabled = mode != Mode.Infinite;
-		cbModeInfinite.setIsChecked(!cbModeInfinite.enabled);
+		btnCreateTrade.enabled = this.price > 0 && (mode != Mode.Recurring || interval > 0) && tradeStack != null;
 	}
-
 
 	@Override
 	protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
@@ -349,11 +390,17 @@ public class GuiTraderTE extends GuiContainer {
 	@Override
 	protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
 		if(isEditingTrade) {
-			if(container.newTradeSlot.getHasStack()) {
+			if(tradeStack != null) {
 				TradeInfo tradeInfo = container.tradeInfo;
 
 				int offsetX = 10;
 				int offsetY = 30;
+
+				RenderHelper.enableGUIStandardItemLighting();
+				GlStateManager.enableDepth();
+				itemRender.renderItemAndEffectIntoGUI(mc.thePlayer, tradeStack, 10, 31);
+				itemRender.renderItemOverlayIntoGUI(fontRendererObj, tradeStack, 10, 31, null);
+				RenderHelper.disableStandardItemLighting();
 
 				if(tradeInfo == null) {
 					drawString(fontRendererObj, "Requesting Trade Information...", 40, offsetY, 0xFFFF00);

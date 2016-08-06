@@ -50,4 +50,8 @@ public abstract class GTamsClient {
 
 	public abstract void changeTerminalOwner(TradeTerminal tradeTerminal, Owner newOwner);
 
+	public abstract TradeList getTrades(TradeTerminal terminal);
+
+	public abstract TradeList createTrade(TradeTerminal terminal, Trade trade);
+
 }

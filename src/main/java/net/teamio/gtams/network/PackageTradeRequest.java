@@ -3,9 +3,9 @@ package net.teamio.gtams.network;
 import io.netty.buffer.ByteBuf;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 
-public class PackageOfferRequest implements IMessage {
+public class PackageTradeRequest implements IMessage {
 
-	public PackageOfferRequest() {
+	public PackageTradeRequest() {
 		// TODO Auto-generated constructor stub
 	}
 

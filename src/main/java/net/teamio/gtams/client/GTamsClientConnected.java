@@ -24,6 +24,7 @@ import com.google.gson.GsonBuilder;
 
 import net.teamio.gtams.Config;
 import net.teamio.gtams.client.entities.EAuthenticate;
+import net.teamio.gtams.client.entities.ETerminalCreateTrade;
 import net.teamio.gtams.client.entities.ETerminalData;
 import net.teamio.gtams.client.entities.ETerminalOwner;
 
@@ -206,5 +207,17 @@ public class GTamsClientConnected extends GTamsClient {
 		TradeInfo ti = doRequestPOST(TradeInfo.class, "/trade", tradeDescriptor);
 		ti.trade = tradeDescriptor;
 		return ti;
+	}
+
+	@Override
+	public TradeList getTrades(TradeTerminal terminal) {
+		TradeList tl = doRequestPOST(TradeList.class, "/terminal_trades", new ETerminalData(terminal.id, true));
+		return tl;
+	}
+
+	@Override
+	public TradeList createTrade(TradeTerminal terminal, Trade trade) {
+		TradeList tl = doRequestPOST(TradeList.class, "/terminal_newtrade", new ETerminalCreateTrade(terminal.id, trade));
+		return tl;
 	}
 }

@@ -1,5 +1,6 @@
 package net.teamio.gtams.gui;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import net.minecraft.entity.player.EntityPlayer;
@@ -9,18 +10,27 @@ import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.teamio.gtams.GTams;
-import net.teamio.gtams.client.Offer;
+import net.teamio.gtams.client.Trade;
+import net.teamio.gtams.client.TradeDescriptor;
 import net.teamio.gtams.client.TradeInfo;
 import net.teamio.gtams.content.TraderTE;
-import net.teamio.gtams.network.PackageOfferRequest;
+import net.teamio.gtams.network.PackageNewTradeRequest;
 import net.teamio.gtams.network.PackageTradeInfoRequest;
+import net.teamio.gtams.network.PackageTradeRequest;
 
 public class ContainerTraderTE extends Container {
 
 	public final TraderTE trader;
-	public List<Offer> offers;
-	public final Slot newTradeSlot;
+	private List<Trade> trades;
+	private ArrayList<ItemStack> tradeStacks;
+	private final Slot newTradeSlot;
 	TradeInfo tradeInfo;
+
+	public static interface SlotChangeListener {
+		public void slotChanged(ItemStack newStack);
+	}
+
+	public SlotChangeListener onSlotChange;
 
 	public ContainerTraderTE(IInventory playerInventory, TraderTE trader) {
 		this.trader = trader;
@@ -29,27 +39,18 @@ public class ContainerTraderTE extends Container {
 			public int getInventoryStackLimit() {
 				return 0;
 			}
-
-			@Override
-			public void markDirty() {
-				super.markDirty();
-				ContainerTraderTE.this.trader.markDirty();
-			}
 		};
 		newTradeSlot = new Slot(fakeInventory, 0, 10, 31) {
 			@Override
 			public void putStack(ItemStack stack) {
-				super.putStack(stack);
-				ItemStack setStack = getStack();
-				if(setStack != null) {
-					setStack.stackSize = 1;
-					requestTradeInfo(setStack);
+				// Only notify the listener, do not actually fill the slot
+				if(onSlotChange != null) {
+					onSlotChange.slotChanged(stack);
 				}
 			}
 
 			@Override
-			public ItemStack decrStackSize(int amount) {
-				putStack(null);
+			public ItemStack getStack() {
 				return null;
 			}
 		};
@@ -77,17 +78,40 @@ public class ContainerTraderTE extends Container {
 		return true;
 	}
 
-	public void setOffers(List<Offer> offers) {
-		this.offers = offers;
+	public void setTrades(List<Trade> trades) {
+		this.trades = trades;
+		tradeStacks = new ArrayList<ItemStack>();
+		tradeStacks.ensureCapacity(trades.size());
+
+		for(int i = 0; i < trades.size(); i++) {
+			TradeDescriptor td = trades.get(i).descriptor;
+			if(td == null) {
+				tradeStacks.add(null);
+			} else {
+				tradeStacks.add(td.toItemStack());
+			}
+		}
 	}
 
-	public void requestOffers() {
-		GTams.channel.sendToServer(new PackageOfferRequest());
+	public List<Trade> getTrades() {
+		return trades;
+	}
+
+	public List<ItemStack> getTradeStacks() {
+		return tradeStacks;
+	}
+
+	public void requestTrades() {
+		GTams.channel.sendToServer(new PackageTradeRequest());
 	}
 
 	public void requestTradeInfo(ItemStack stack) {
 		tradeInfo = null;
 		GTams.channel.sendToServer(new PackageTradeInfoRequest(stack));
+	}
+
+	public void requestCreateTrade(Trade newTrade) {
+		GTams.channel.sendToServer(new PackageNewTradeRequest(newTrade));
 	}
 
 	public void setTradeInfo(TradeInfo info) {

@@ -11,7 +11,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fml.common.registry.GameRegistry;
 
 public class TradeDescriptor {
 
@@ -19,8 +18,9 @@ public class TradeDescriptor {
 	public int damage;
 	public String nbtHash;
 
+	//TODO: serialized NBT instead of hash? (use hash to identify, but send nbt data as well)
+
 	public TradeDescriptor() {
-		// TODO Auto-generated constructor stub
 	}
 
 	/**
@@ -39,8 +39,20 @@ public class TradeDescriptor {
 	 * @param damage
 	 * @param nbtHash
 	 */
+	public TradeDescriptor(Item item, int damage, String nbtHash) {
+		ResourceLocation key = Item.REGISTRY.getNameForObject(item);
+		this.itemName = key.toString();
+		this.damage = damage;
+		this.nbtHash = nbtHash;
+	}
+
+	/**
+	 * @param itemName
+	 * @param damage
+	 * @param nbtHash
+	 */
 	public TradeDescriptor(ItemStack stack) {
-		ResourceLocation key = GameRegistry.findRegistry(Item.class).getKey(stack.getItem());
+		ResourceLocation key = Item.REGISTRY.getNameForObject(stack.getItem());
 		this.itemName = key.toString();
 		this.damage = stack.getItemDamage();
 		NBTTagCompound tag = stack.getTagCompound();
@@ -70,6 +82,22 @@ public class TradeDescriptor {
 				throw new RuntimeException(e);
 			}
 		}
+	}
+
+	public ItemStack toItemStack() {
+		Item item = Item.REGISTRY.getObject(new ResourceLocation(itemName));
+		if(item == null) {
+			return null;
+		}
+		return new ItemStack(item, 1, damage);
+	}
+
+	@Override
+	public String toString() {
+		if(nbtHash.isEmpty()) {
+			return itemName + "@" + Integer.toString(damage);
+		}
+		return itemName + "@" + Integer.toString(damage) + " +{NBT}";
 	}
 
 }
