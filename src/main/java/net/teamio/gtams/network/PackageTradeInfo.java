@@ -8,8 +8,8 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.teamio.gtams.GTams;
-import net.teamio.gtams.client.TradeDescriptor;
-import net.teamio.gtams.client.TradeInfo;
+import net.teamio.gtams.client.entities2.TradeDescriptor;
+import net.teamio.gtams.client.entities2.TradeInfo;
 import net.teamio.gtams.gui.ContainerTraderTE;
 
 public class PackageTradeInfo implements IMessage {

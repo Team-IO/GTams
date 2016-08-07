@@ -2,7 +2,7 @@ package net.teamio.gtams.client.entities;
 
 import java.util.UUID;
 
-import net.teamio.gtams.client.Trade;
+import net.teamio.gtams.client.entities2.Trade;
 
 public class ETerminalCreateTrade {
 

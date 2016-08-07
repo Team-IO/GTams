@@ -3,7 +3,7 @@ package net.teamio.gtams.client.entities;
 import java.util.List;
 import java.util.UUID;
 
-import net.teamio.gtams.client.Goods;
+import net.teamio.gtams.client.entities2.Goods;
 
 public class ETerminalGoodsData {
 

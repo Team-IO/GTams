@@ -11,10 +11,10 @@ import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.items.SlotItemHandler;
 import net.teamio.gtams.GTams;
-import net.teamio.gtams.client.Goods;
-import net.teamio.gtams.client.Trade;
-import net.teamio.gtams.client.TradeDescriptor;
-import net.teamio.gtams.client.TradeInfo;
+import net.teamio.gtams.client.entities2.Goods;
+import net.teamio.gtams.client.entities2.Trade;
+import net.teamio.gtams.client.entities2.TradeDescriptor;
+import net.teamio.gtams.client.entities2.TradeInfo;
 import net.teamio.gtams.content.TraderTE;
 import net.teamio.gtams.network.PackageNewTradeRequest;
 import net.teamio.gtams.network.PackageTradeInfoRequest;
@@ -91,7 +91,7 @@ public class ContainerTraderTE extends Container {
 
 	public void setTrades(List<Trade> trades) {
 		this.trades = trades;
-		tradeStacks = new ArrayList<ItemStack>();
+		tradeStacks = new ArrayList<>();
 		tradeStacks.ensureCapacity(trades.size());
 
 		for(int i = 0; i < trades.size(); i++) {
@@ -139,7 +139,7 @@ public class ContainerTraderTE extends Container {
 
 	public void setGoods(ArrayList<Goods> goods) {
 		this.goods = goods;
-		goodsStacks = new ArrayList<ItemStack>();
+		goodsStacks = new ArrayList<>();
 		goodsStacks.ensureCapacity(trades.size());
 
 		for(int i = 0; i < goods.size(); i++) {

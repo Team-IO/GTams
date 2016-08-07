@@ -3,14 +3,33 @@ package net.teamio.gtams.client;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
+import net.teamio.gtams.client.entities2.GoodsList;
+import net.teamio.gtams.client.entities2.Owner;
+import net.teamio.gtams.client.entities2.Trade;
+import net.teamio.gtams.client.entities2.TradeList;
+import net.teamio.gtams.client.entities2.TradeTerminal;
 
 public abstract class GTamsClient {
 
 	protected final Map<UUID, Owner> owners;
 	public final Object sync_object = new Object();
+	private BlockingQueue<Runnable> pendingTasks = new LinkedBlockingQueue<>();
+	private ThreadPoolExecutor tp = new ThreadPoolExecutor(5, 30, 5, TimeUnit.SECONDS, pendingTasks, new ThreadFactory() {
+
+			@Override
+			public Thread newThread(Runnable r) {
+				return new Thread(r, "GTams Worker Thread");
+			}
+		});
 
 	public GTamsClient() {
-		owners = new HashMap<UUID, Owner>();
+		owners = new HashMap<>();
 	}
 
 	public Owner getOwner(UUID id) {
@@ -57,6 +76,10 @@ public abstract class GTamsClient {
 	public abstract GoodsList getGoods(TradeTerminal terminal);
 
 	public abstract GoodsList addGoods(TradeTerminal terminal, GoodsList gl);
+
+	public void addTask(Task newTask) {
+		tp.execute(newTask);
+	}
 
 	public abstract GoodsList removeGoods(TradeTerminal terminal, GoodsList request);
 

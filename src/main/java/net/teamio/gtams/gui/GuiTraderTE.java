@@ -21,11 +21,11 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.client.GuiScrollingList;
 import net.minecraftforge.fml.client.config.GuiCheckBox;
-import net.teamio.gtams.client.Goods;
-import net.teamio.gtams.client.Mode;
-import net.teamio.gtams.client.Trade;
-import net.teamio.gtams.client.TradeDescriptor;
-import net.teamio.gtams.client.TradeInfo;
+import net.teamio.gtams.client.entities2.Goods;
+import net.teamio.gtams.client.entities2.Mode;
+import net.teamio.gtams.client.entities2.Trade;
+import net.teamio.gtams.client.entities2.TradeDescriptor;
+import net.teamio.gtams.client.entities2.TradeInfo;
 import net.teamio.gtams.gui.ContainerTraderTE.SlotChangeListener;
 
 public class GuiTraderTE extends GuiContainer {
@@ -179,8 +179,8 @@ public class GuiTraderTE extends GuiContainer {
 
 	private final ContainerTraderTE container;
 
-	private List<GuiTextField> textFields = new ArrayList<GuiTextField>();
-	private List<Badge> badges = new ArrayList<Badge>();
+	private List<GuiTextField> textFields = new ArrayList<>();
+	private List<Badge> badges = new ArrayList<>();
 
 	private OfferList availableOffers;
 	private GuiButton btnNewTrade;

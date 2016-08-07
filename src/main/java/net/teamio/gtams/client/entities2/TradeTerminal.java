@@ -1,4 +1,4 @@
-package net.teamio.gtams.client;
+package net.teamio.gtams.client.entities2;
 
 import java.util.UUID;
 

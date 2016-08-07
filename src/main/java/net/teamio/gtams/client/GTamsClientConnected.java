@@ -2,7 +2,6 @@ package net.teamio.gtams.client;
 
 import java.io.IOException;
 import java.net.Socket;
-import java.net.UnknownHostException;
 
 import org.apache.http.HttpClientConnection;
 import org.apache.http.HttpEntity;
@@ -29,6 +28,13 @@ import net.teamio.gtams.client.entities.ETerminalCreateTrade;
 import net.teamio.gtams.client.entities.ETerminalData;
 import net.teamio.gtams.client.entities.ETerminalGoodsData;
 import net.teamio.gtams.client.entities.ETerminalOwner;
+import net.teamio.gtams.client.entities2.GoodsList;
+import net.teamio.gtams.client.entities2.Owner;
+import net.teamio.gtams.client.entities2.Trade;
+import net.teamio.gtams.client.entities2.TradeDescriptor;
+import net.teamio.gtams.client.entities2.TradeInfo;
+import net.teamio.gtams.client.entities2.TradeList;
+import net.teamio.gtams.client.entities2.TradeTerminal;
 
 public class GTamsClientConnected extends GTamsClient {
 
@@ -89,13 +95,23 @@ public class GTamsClientConnected extends GTamsClient {
 			}
 		}
 		DefaultBHttpClientConnection newConnection = new DefaultBHttpClientConnection(4096);
-		Socket socket;
+		Socket socket = null;
 		try {
 			socket = new Socket(host, port);
 			newConnection.bind(socket);
-		} catch (UnknownHostException e) {
-			throw new GTamsException("Error connecting to GTams Server", e);
 		} catch (IOException e) {
+			if(socket != null) {
+				try {
+					socket.close();
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+			}
+			try {
+				newConnection.shutdown();
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
 			throw new GTamsException("Error connecting to GTams Server", e);
 		}
 

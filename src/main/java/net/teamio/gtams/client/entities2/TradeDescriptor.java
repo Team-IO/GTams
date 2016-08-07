@@ -1,4 +1,4 @@
-package net.teamio.gtams.client;
+package net.teamio.gtams.client.entities2;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -62,11 +62,10 @@ public class TradeDescriptor {
 			MessageDigest md;
 			try {
 				md = MessageDigest.getInstance("SHA-256");
-				ByteArrayOutputStream bo = new ByteArrayOutputStream();
-
-				CompressedStreamTools.write(tag, new DataOutputStream(bo));
-				md.update(bo.toByteArray());
-				bo.close();
+				try(ByteArrayOutputStream bo = new ByteArrayOutputStream()) {
+					CompressedStreamTools.write(tag, new DataOutputStream(bo));
+					md.update(bo.toByteArray());
+				}
 
 				byte[] digest = md.digest();
 				this.nbtHash = "TODO";

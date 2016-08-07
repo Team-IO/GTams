@@ -1,4 +1,4 @@
-package net.teamio.gtams.client;
+package net.teamio.gtams.client.entities2;
 
 public enum Mode {
 	Once,

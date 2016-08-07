@@ -16,6 +16,8 @@ repositories {
     jcenter()
 }
 
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
 ext.configFile = file "build.properties"
 
 configFile.withReader {

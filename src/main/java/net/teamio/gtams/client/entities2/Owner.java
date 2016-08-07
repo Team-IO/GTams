@@ -1,10 +1,12 @@
-package net.teamio.gtams.client;
+package net.teamio.gtams.client.entities2;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+
+import net.teamio.gtams.client.GTamsClient;
 
 public class Owner {
 
@@ -17,8 +19,8 @@ public class Owner {
 	public Owner(GTamsClient client, UUID persistentID) {
 		this.client = client;
 		this.persistentID = persistentID;
-		terminalCache = new HashMap<UUID, TradeTerminal>();
-		onlineTerminals = new HashSet<TradeTerminal>();
+		terminalCache = new HashMap<>();
+		onlineTerminals = new HashSet<>();
 	}
 
 	public TradeTerminal getTerminal(UUID terminalId) {

@@ -10,12 +10,12 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.teamio.gtams.GTams;
-import net.teamio.gtams.client.Goods;
-import net.teamio.gtams.client.GoodsList;
-import net.teamio.gtams.client.Mode;
-import net.teamio.gtams.client.Trade;
-import net.teamio.gtams.client.TradeDescriptor;
-import net.teamio.gtams.client.TradeList;
+import net.teamio.gtams.client.entities2.Goods;
+import net.teamio.gtams.client.entities2.GoodsList;
+import net.teamio.gtams.client.entities2.Mode;
+import net.teamio.gtams.client.entities2.Trade;
+import net.teamio.gtams.client.entities2.TradeDescriptor;
+import net.teamio.gtams.client.entities2.TradeList;
 import net.teamio.gtams.gui.ContainerTraderTE;
 
 public class PackageTradeData implements IMessage {
@@ -25,20 +25,22 @@ public class PackageTradeData implements IMessage {
 		@Override
 		public PackageTradeData onMessage(PackageTradeRequest message, MessageContext ctx) {
 			Container container = ctx.getServerHandler().playerEntity.openContainer;
-			PackageTradeData response;
-			if(container instanceof ContainerTraderTE) {
-				ContainerTraderTE ctte = (ContainerTraderTE)container;
-				TradeList tl = GTams.gtamsClient.getTrades(ctte.trader.getTerminal());
-				GoodsList gl = GTams.gtamsClient.getGoods(ctte.trader.getTerminal());
-				if(tl == null || gl == null) {
-					//TODO: what to do?
-				} else {
-					return new PackageTradeData(tl.trades, gl.goods);
-				}
-			} else {
-				return new PackageTradeData();
+			if (container instanceof ContainerTraderTE) {
+				ContainerTraderTE ctte = (ContainerTraderTE) container;
+				TradeList tl = ctte.trader.tradesCache;
+				if (tl == null)
+					tl = GTams.gtamsClient.getTrades(ctte.trader.getTerminal());
+				if (tl == null)
+					tl = new TradeList();
+				GoodsList gl = ctte.trader.goodsCache;
+				if (gl == null)
+					gl = GTams.gtamsClient.getGoods(ctte.trader.getTerminal());
+				if (gl == null)
+					gl = new GoodsList();
+
+				return new PackageTradeData(tl.trades, gl.goods);
 			}
-			return null;
+			return new PackageTradeData();
 		}
 	}
 
@@ -47,12 +49,12 @@ public class PackageTradeData implements IMessage {
 		@Override
 		public IMessage onMessage(PackageTradeData message, MessageContext ctx) {
 			Container container = Minecraft.getMinecraft().thePlayer.openContainer;
-			if(container instanceof ContainerTraderTE) {
+			if (container instanceof ContainerTraderTE) {
 
-				((ContainerTraderTE)container).setTrades(message.trades);
-				((ContainerTraderTE)container).setGoods(message.goods);
+				((ContainerTraderTE) container).setTrades(message.trades);
+				((ContainerTraderTE) container).setGoods(message.goods);
 			} else {
-				//TODO: Log
+				// TODO: Log
 				System.out.println("Wrong container open");
 			}
 			return null;
@@ -64,16 +66,16 @@ public class PackageTradeData implements IMessage {
 	public final ArrayList<Goods> goods;
 
 	public PackageTradeData() {
-		trades = new ArrayList<Trade>();
-		goods = new ArrayList<Goods>();
+		trades = new ArrayList<>();
+		goods = new ArrayList<>();
 	}
 
 	public PackageTradeData(ArrayList<Trade> trades, ArrayList<Goods> goods) {
-		if(goods == null) {
-			goods = new ArrayList<Goods>();
+		if (goods == null) {
+			goods = new ArrayList<>();
 		}
-		if(trades == null) {
-			trades = new ArrayList<Trade>();
+		if (trades == null) {
+			trades = new ArrayList<>();
 		}
 		this.trades = trades;
 		this.goods = goods;
@@ -91,7 +93,7 @@ public class PackageTradeData implements IMessage {
 				Trade trade = new Trade();
 
 				boolean hasTradeDescriptor = packetBuffer.readBoolean();
-				if(hasTradeDescriptor) {
+				if (hasTradeDescriptor) {
 					trade.descriptor = new TradeDescriptor();
 					trade.descriptor.itemName = packetBuffer.readStringFromBuffer(255);
 					trade.descriptor.damage = packetBuffer.readInt();
@@ -99,6 +101,7 @@ public class PackageTradeData implements IMessage {
 				}
 				trade.isBuy = packetBuffer.readBoolean();
 				trade.price = packetBuffer.readInt();
+				trade.amount = packetBuffer.readInt();
 				trade.interval = packetBuffer.readInt();
 				trade.stopAfter = packetBuffer.readInt();
 				trade.mode = packetBuffer.readEnumValue(Mode.class);
@@ -108,11 +111,11 @@ public class PackageTradeData implements IMessage {
 			goods.clear();
 			length = packetBuffer.readInt();
 			goods.ensureCapacity(length);
-			for(int i = 0; i < length; i++) {
+			for (int i = 0; i < length; i++) {
 				Goods g = new Goods();
 
 				boolean hasTradeDescriptor = packetBuffer.readBoolean();
-				if(hasTradeDescriptor) {
+				if (hasTradeDescriptor) {
 					g.what = new TradeDescriptor();
 					g.what.itemName = packetBuffer.readStringFromBuffer(255);
 					g.what.damage = packetBuffer.readInt();
@@ -135,27 +138,28 @@ public class PackageTradeData implements IMessage {
 
 		try {
 			packetBuffer.writeInt(trades.size());
-			for(Trade off : trades) {
+			for (Trade off : trades) {
 				boolean hasTradeDescriptor = off.descriptor != null;
 
 				packetBuffer.writeBoolean(hasTradeDescriptor);
-				if(hasTradeDescriptor) {
+				if (hasTradeDescriptor) {
 					packetBuffer.writeString(off.descriptor.itemName);
 					packetBuffer.writeInt(off.descriptor.damage);
 					packetBuffer.writeString(off.descriptor.nbtHash);
 				}
 				packetBuffer.writeBoolean(off.isBuy);
 				packetBuffer.writeInt(off.price);
+				packetBuffer.writeInt(off.amount);
 				packetBuffer.writeInt(off.interval);
 				packetBuffer.writeInt(off.stopAfter);
 				packetBuffer.writeEnumValue(off.mode);
 			}
 			packetBuffer.writeInt(goods.size());
-			for(Goods g : goods) {
+			for (Goods g : goods) {
 				boolean hasTradeDescriptor = g.what != null;
 
 				packetBuffer.writeBoolean(hasTradeDescriptor);
-				if(hasTradeDescriptor) {
+				if (hasTradeDescriptor) {
 					packetBuffer.writeString(g.what.itemName);
 					packetBuffer.writeInt(g.what.damage);
 					packetBuffer.writeString(g.what.nbtHash);
