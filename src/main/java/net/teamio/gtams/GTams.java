@@ -46,7 +46,7 @@ public class GTams {
 
 		Config.loadConfig(event.getSuggestedConfigurationFile(), event.getModConfigurationDirectory());
 
-		CreativeTabs creativeTab = new CreativeTabs("taam.creativetab") {
+		CreativeTabs creativeTab = new CreativeTabs("gtams.creativetab") {
 			@Override
 			public Item getTabIconItem() {
 				return itemTrader;
