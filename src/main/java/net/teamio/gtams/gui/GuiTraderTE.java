@@ -6,6 +6,8 @@ import java.util.List;
 
 import org.lwjgl.input.Mouse;
 
+import com.google.common.collect.Lists;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
@@ -98,15 +100,15 @@ public class GuiTraderTE extends GuiContainer {
 
 		@Override
 		protected void drawSlot(int slotIdx, int entryRight, int slotTop, int slotBuffer, Tessellator tess) {
-			List<Trade> offers = container.getTrades();
-			List<ItemStack> offerStacks = container.getTradeStacks();
-			if (offers == null) {
+			List<Trade> trades = container.getTrades();
+			List<ItemStack> tradeStacks = container.getTradeStacks();
+			if (trades == null) {
 				drawString(fontRendererObj, "Waiting for trade data", left, slotTop, 0xFF0000);
-			} else if (offers.isEmpty()) {
+			} else if (trades.isEmpty()) {
 				drawString(fontRendererObj, "No Active Trades", left, slotTop, 0xFFFF00);
 			} else {
-				Trade offer = offers.get(slotIdx);
-				ItemStack itemStack = offerStacks.get(slotIdx);
+				Trade trade = trades.get(slotIdx);
+				ItemStack itemStack = tradeStacks.get(slotIdx);
 				if (itemStack != null) {
 					RenderHelper.enableGUIStandardItemLighting();
 					GlStateManager.enableDepth();
@@ -114,7 +116,7 @@ public class GuiTraderTE extends GuiContainer {
 					itemRender.renderItemOverlayIntoGUI(fontRendererObj, itemStack, left, slotTop, null);
 					RenderHelper.disableStandardItemLighting();
 				}
-				if(offer.descriptor == null) {
+				if(trade.descriptor == null) {
 					drawString(fontRendererObj, "Invalid Data", left + 16, slotTop, 0xFFFF00);
 				} else {
 					if (itemStack == null) {
@@ -122,9 +124,9 @@ public class GuiTraderTE extends GuiContainer {
 					} else {
 						drawString(fontRendererObj, itemStack.getDisplayName(), left + 16, slotTop, 0xFFFFFF);
 					}
-					drawString(fontRendererObj, offer.descriptor.toString(), left + 16, slotTop + 10, 0xFFFFFF);
+					drawString(fontRendererObj, trade.descriptor.toString(), left + 16, slotTop + 10, 0xFFFFFF);
 				}
-				drawString(fontRendererObj, "Some text here", left + 16, slotTop + 20, 0xFFFFFF);
+				drawString(fontRendererObj, trade.toDisplayString(), left + 16, slotTop + 20, 0xFFFFFF);
 			}
 		}
 
@@ -133,9 +135,33 @@ public class GuiTraderTE extends GuiContainer {
 		}
 	}
 
+	public static class Badge {
+		int u;
+		int v;
+		int size;
+		int xPos;
+		int yPos;
+		List<String> hover;
+		boolean visible = true;
+
+		public Badge(int xPos, int yPos, int u, int v, int size, List<String> hover) {
+			this.u = u;
+			this.v = v;
+			this.size = size;
+			this.xPos = xPos;
+			this.yPos = yPos;
+			this.hover = hover;
+		}
+
+		public boolean contains(int mouseX, int mouseY) {
+			return mouseX > xPos && mouseX < xPos + size &&
+			mouseY > yPos && mouseY < yPos + size;
+		}
+	}
+
 	public static ResourceLocation debug_gui = new ResourceLocation("gtams", "textures/gui/debug_gui.png");
 	public static ResourceLocation debug_gui_settings = new ResourceLocation("gtams", "textures/gui/debug_gui_settings.png");
-	public static ResourceLocation minecoin = new ResourceLocation("gtams", "textures/gui/minecoin.png");
+	public static ResourceLocation badges_tex = new ResourceLocation("gtams", "textures/gui/badges.png");
 
 	private static final int TXT_PRICE = 4001;
 	private static final int TXT_INTERVAL = 4002;
@@ -154,6 +180,7 @@ public class GuiTraderTE extends GuiContainer {
 	private final ContainerTraderTE container;
 
 	private List<GuiTextField> textFields = new ArrayList<GuiTextField>();
+	private List<Badge> badges = new ArrayList<Badge>();
 
 	private OfferList availableOffers;
 	private GuiButton btnNewTrade;
@@ -178,6 +205,9 @@ public class GuiTraderTE extends GuiContainer {
 	private int interval = 1;
 	private int stopAfter = 0;
 	private NumericField txtAmount;
+	private Badge badgePrice;
+	private Badge badgeAmount;
+	private Badge badgeWarning;
 
 	public GuiTraderTE(ContainerTraderTE conta) {
 		super(conta);
@@ -200,6 +230,7 @@ public class GuiTraderTE extends GuiContainer {
 	@Override
 	public void initGui() {
 		textFields.clear();
+		badges.clear();
 
 		this.xSize = 256;
 		this.ySize = 256;
@@ -217,12 +248,12 @@ public class GuiTraderTE extends GuiContainer {
 		availableOffers = new OfferList(Minecraft.getMinecraft(), listWidth, listHeight, top, bottom, left, lineHeight, this.width, this.height);
 		availableOffers.registerScrollButtons(buttonList, 5, 6);
 
-		btnNewTrade = new GuiButton(BTN_NEWTRADE, guiLeft + 190, guiTop + 5, 60, 20, "New Trade");
-		btnCancel = new GuiButton(BTN_CANCEL, guiLeft + 5, guiTop + 5, 50, 20, "Cancel");
+		btnNewTrade = new GuiButton(BTN_NEWTRADE, guiLeft + 188, guiTop + 5, 60, 20, "New Trade");
+		btnCancel = new GuiButton(BTN_CANCEL, guiLeft + 7, guiTop + 5, 50, 20, "Cancel");
 		buttonList.add(btnCancel);
 		buttonList.add(btnNewTrade);
 
-		txtPrice = new NumericField(TXT_PRICE, fontRendererObj, guiLeft + 75, guiTop + 116, 40, 10) {
+		txtPrice = new NumericField(TXT_PRICE, fontRendererObj, guiLeft + 75, guiTop + 136, 40, 10) {
 			@Override
 			protected void onTextChanged(String text) {
 				updateVisibility();
@@ -230,7 +261,7 @@ public class GuiTraderTE extends GuiContainer {
 		};
 		txtPrice.setMaxStringLength(5);
 
-		txtAmount = new NumericField(TXT_PRICE, fontRendererObj, guiLeft + 75, guiTop + 126, 40, 10) {
+		txtAmount = new NumericField(TXT_PRICE, fontRendererObj, guiLeft + 75, guiTop + 146, 40, 10) {
 			@Override
 			protected void onTextChanged(String text) {
 				updateVisibility();
@@ -240,20 +271,20 @@ public class GuiTraderTE extends GuiContainer {
 		btnCreateTrade = new GuiButton(BTN_CREATETRADE, guiLeft + 166, guiTop + 30, 80, 20, "Create Trade");
 		buttonList.add(btnCreateTrade);
 
-		cbBuy = new GuiCheckBox(CB_BUY, guiLeft + 10, guiTop + 110, "Buy", false);
-		cbSell = new GuiCheckBox(CB_SELL, guiLeft + 10, guiTop + 120, "Sell", true);
+		cbBuy = new GuiCheckBox(CB_BUY, guiLeft + 10, guiTop + 135, "Buy", false);
+		cbSell = new GuiCheckBox(CB_SELL, guiLeft + 10, guiTop + 145, "Sell", true);
 
 		buttonList.add(cbBuy);
 		buttonList.add(cbSell);
 
-		int modeTop = 95;
+		int modeTop = 125;
 		int modeLeft = 150;
 		cbModeOnce = new GuiCheckBox(BTN_MODE_ONCE, guiLeft + modeLeft, guiTop + modeTop, "One-Time", true);
 		cbModeRecurring = new GuiCheckBox(BTN_MODE_RECURRING, guiLeft + modeLeft, guiTop + modeTop + 10, "Recurring", false);
 		cbModeInfinite = new GuiCheckBox(BTN_MODE_INFINITE, guiLeft + modeLeft, guiTop + modeTop + 20, "Infinite", false);
 
-		int configTop = 130;
-		int configLeft = 135;
+		int configTop = 105;
+		int configLeft = 75;
 
 		txtInterval = new NumericField(TXT_INTERVAL, fontRendererObj, guiLeft + configLeft, guiTop + configTop, 26, 10) {
 			@Override
@@ -262,7 +293,7 @@ public class GuiTraderTE extends GuiContainer {
 			}
 		};
 		txtInterval.setMaxStringLength(3);
-		txtStopAfter = new NumericField(TXT_STOP_AFTER, fontRendererObj, guiLeft + configLeft, guiTop + configTop + 15, 26, 10) {
+		txtStopAfter = new NumericField(TXT_STOP_AFTER, fontRendererObj, guiLeft + configLeft, guiTop + configTop + 10, 26, 10) {
 			@Override
 			protected void onTextChanged(String text) {
 				updateVisibility();
@@ -278,6 +309,19 @@ public class GuiTraderTE extends GuiContainer {
 		buttonList.add(cbModeOnce);
 		buttonList.add(cbModeRecurring);
 		buttonList.add(cbModeInfinite);
+
+		List<String> textLines = Lists.newArrayList("Price", "Minecoins", "Junktext");
+		badgePrice = new Badge(txtPrice.xPosition - 10, txtPrice.yPosition + 1, 0, 0, 8, textLines);
+
+		textLines = Lists.newArrayList("Amount");
+		badgeAmount = new Badge(txtAmount.xPosition - 10, txtAmount.yPosition + 1, 1, 0, 8, textLines);
+
+		badgeWarning = new Badge(btnCreateTrade.xPosition - 10, btnCreateTrade.yPosition + 6, 0, 1, 8, new ArrayList<String>());
+		badgeWarning.visible = false;
+
+		badges.add(badgePrice);
+		badges.add(badgeAmount);
+		badges.add(badgeWarning);
 
 		txtPrice.setText(Integer.toString(price));
 		txtAmount.setText(Integer.toString(amount));
@@ -351,6 +395,10 @@ public class GuiTraderTE extends GuiContainer {
 
 	private void updateVisibility() {
 
+		/*
+		 * Visibility update
+		 */
+
 		btnNewTrade.visible = !isEditingTrade;
 		btnNewTrade.enabled = !isEditingTrade;
 
@@ -363,6 +411,9 @@ public class GuiTraderTE extends GuiContainer {
 		availableOffers.visible = !isEditingTrade;
 		txtPrice.setVisible(isEditingTrade);
 		txtAmount.setVisible(isEditingTrade);
+
+		badgePrice.visible = isEditingTrade;
+		badgeAmount.visible = isEditingTrade;
 
 		txtInterval.setVisible(isEditingTrade && mode == Mode.Recurring);
 		txtStopAfter.setVisible(isEditingTrade && mode == Mode.Recurring);
@@ -382,13 +433,46 @@ public class GuiTraderTE extends GuiContainer {
 		cbModeInfinite.visible = isEditingTrade;
 		cbModeInfinite.setIsChecked(!cbModeInfinite.enabled);
 
+		/*
+		 * Fetch info for creating a trade later
+		 */
+
 		isBuy = cbBuy.isChecked();
 		this.price = txtPrice.getIntValue();
 		this.amount = txtAmount.getIntValue();
 		this.interval = txtInterval.getIntValue();
 		this.stopAfter = txtStopAfter.getIntValue();
 
-		btnCreateTrade.enabled = this.price > 0 && (mode != Mode.Recurring || interval > 0) && tradeStack != null && amount > 0;
+		/*
+		 * Validity Check
+		 */
+		btnCreateTrade.enabled = true;
+		badgeWarning.visible = false;
+		badgeWarning.hover.clear();
+
+		if(isEditingTrade) {
+			if(price <= 0) {
+				btnCreateTrade.enabled = false;
+				badgeWarning.visible = true;
+				badgeWarning.hover.add("You need to specify a price");
+			}
+			if(amount <= 0) {
+				btnCreateTrade.enabled = false;
+				badgeWarning.visible = true;
+				badgeWarning.hover.add("You need to specify the amount of items to trade");
+			}
+			if(tradeStack == null) {
+				btnCreateTrade.enabled = false;
+				badgeWarning.visible = true;
+				badgeWarning.hover.add("You need to specify the item to trade");
+			}
+
+			if(mode == Mode.Recurring && interval <= 0) {
+				btnCreateTrade.enabled = false;
+				badgeWarning.visible = true;
+				badgeWarning.hover.add("You need to specify an interval for recurring trades");
+			}
+		}
 	}
 
 	@Override
@@ -402,13 +486,22 @@ public class GuiTraderTE extends GuiContainer {
 
 		//TODO: Translate
 		drawString(fontRendererObj, "Inventory", guiLeft + 8, guiTop + 162, 0xFFFFFF);
-		if(isEditingTrade) {
-			mc.renderEngine.bindTexture(minecoin);
-			Gui.drawModalRectWithCustomSizedTexture(txtPrice.xPosition + txtPrice.width + 3, txtPrice.yPosition + 1, 0, 0, 8, 8, 8, 8);
-		} else {
+		if(!isEditingTrade) {
 			drawString(fontRendererObj, "Active Trades:", guiLeft + 8, guiTop + 16, 0xFFFFFF);
 		}
+
+		for(Badge badge : badges) {
+			mc.renderEngine.bindTexture(badges_tex);
+			if(badge.visible) {
+				Gui.drawModalRectWithCustomSizedTexture(
+						badge.xPos, badge.yPos,
+						badge.u * badge.size, badge.v * badge.size,
+						badge.size, badge.size, badge.size * 2, badge.size * 2);
+			}
+		}
 	}
+
+
 
 	@Override
 	protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
@@ -430,7 +523,8 @@ public class GuiTraderTE extends GuiContainer {
 					drawString(fontRendererObj, "Requesting Trade Information...", 40, offsetY, 0xFFFF00);
 				} else {
 					TradeDescriptor trade = tradeInfo.trade;
-					drawString(fontRendererObj, trade.itemName + ":" + Integer.toString(trade.damage), offsetX + 20, offsetY, 0xFFFFFF);
+					drawString(fontRendererObj, tradeStack.getDisplayName(), offsetX + 20, offsetY, 0xFFFFFF);
+					drawString(fontRendererObj, trade.toString(), offsetX + 20, offsetY + 10, 0xFFFFFF);
 					drawString(fontRendererObj, "Supply/Demand " + Float.toString(Math.round(tradeInfo.supplyDemandFactor * 100) / 100f) + "%", offsetX, offsetY + 20, 0xFFFFFF);
 					drawString(fontRendererObj, "Statistics from last period:", offsetX, offsetY + 38, 0xFFFF00);
 					drawString(fontRendererObj, "Trade Volume: " + Integer.toString(tradeInfo.volumeLastPeriod), offsetX, offsetY + 46, 0xFFFFFF);
@@ -438,8 +532,6 @@ public class GuiTraderTE extends GuiContainer {
 					drawString(fontRendererObj, "Mean Price: " + Float.toString(Math.round(tradeInfo.meanPrice * 100) / 100f), offsetX, offsetY + 62, 0xFFFFFF);
 				}
 			}
-			drawTextFieldLabel(txtPrice, "Price");
-			drawTextFieldLabel(txtAmount, "Amount");
 			drawTextFieldLabel(txtInterval, "Every", "seconds");
 			drawTextFieldLabel(txtStopAfter, "Stop after", "transactions");
 		}
@@ -497,6 +589,11 @@ public class GuiTraderTE extends GuiContainer {
 		for(GuiTextField txt : textFields) {
 			if(txt.getVisible()) {
 				txt.drawTextBox();
+			}
+		}
+		for(Badge badge : badges) {
+			if(badge.visible && badge.contains(mouseX, mouseY)) {
+				drawHoveringText(badge.hover, mouseX, mouseY);
 			}
 		}
 	}
