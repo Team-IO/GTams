@@ -118,8 +118,7 @@ public class PackageTradeData implements IMessage {
 					g.what.damage = packetBuffer.readInt();
 					g.what.nbtHash = packetBuffer.readStringFromBuffer(255);
 				}
-				g.locked = packetBuffer.readInt();
-				g.unlocked = packetBuffer.readInt();
+				g.amount = packetBuffer.readInt();
 
 				goods.add(g);
 			}
@@ -161,8 +160,7 @@ public class PackageTradeData implements IMessage {
 					packetBuffer.writeInt(g.what.damage);
 					packetBuffer.writeString(g.what.nbtHash);
 				}
-				packetBuffer.writeInt(g.locked);
-				packetBuffer.writeInt(g.unlocked);
+				packetBuffer.writeInt(g.amount);
 			}
 		} catch (Exception e) {
 			// TODO: handle exception

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
 
 import net.minecraft.item.ItemStack;
@@ -123,7 +124,7 @@ public class TraderTE extends TileEntity implements ITickable {
 				GoodsList gl = GTams.gtamsClient.getGoods(terminal);
 
 				if(tl == null || gl == null ||
-						tl.trades == null || tl.trades.isEmpty()) {
+						tl.trades == null || gl.goods == null) {
 					return;
 				}
 
@@ -133,7 +134,7 @@ public class TraderTE extends TileEntity implements ITickable {
 					gl.goods = new ArrayList<Goods>();
 				} else {
 					for(Goods g : gl.goods) {
-						goodsSimulation.put(g.what, g.unlocked + g.locked);
+						goodsSimulation.put(g.what, g.amount);
 					}
 				}
 
@@ -186,10 +187,72 @@ public class TraderTE extends TileEntity implements ITickable {
 				for(ItemStack stack : transferToServer) {
 					Goods goods = new Goods();
 					goods.what = new TradeDescriptor(stack);
-					goods.locked = stack.stackSize;
+					goods.amount = stack.stackSize;
 					gl.goods.add(goods);
 				}
 				GTams.gtamsClient.addGoods(terminal, gl);
+				gl.goods.clear();
+
+				TradeDescriptor[] iiSimulation = inInventory.clone();
+
+				// Simulate what would fit into the inventory
+				for(Entry<TradeDescriptor, Integer> kv : goodsSimulation.entrySet()) {
+					TradeDescriptor what = kv.getKey();
+					ItemStack stack = what.toItemStack();
+
+					int maxStackSize = Math.min(stack.getMaxStackSize(), 64);
+					int canFit = 0;
+
+					for(int i = 0; i < slots; i++) {
+						TradeDescriptor ii = iiSimulation[i];
+						if(ii == null) {
+							canFit += maxStackSize;
+							// Lock that slot for different goods
+							iiSimulation[i] = what;
+						} else if(ii.equals(what)) {
+							canFit += maxStackSize - itemHandler.getStackInSlot(i).stackSize;
+							// No need to lock the slot, as the other goods will not match.
+						}
+					}
+
+					int amount = Math.min(canFit, kv.getValue());
+
+					gl.goods.add(new Goods(what, amount));
+				}
+				// Request removal from the server
+				gl = GTams.gtamsClient.removeGoods(terminal, gl);
+
+				// Actually add the removed goods to the inventory
+				for(Entry<TradeDescriptor, Integer> kv : goodsSimulation.entrySet()) {
+					TradeDescriptor what = kv.getKey();
+					ItemStack stack = what.toItemStack();
+
+					int maxStackSize = Math.min(stack.getMaxStackSize(), 64);
+
+					int amount = kv.getValue();
+
+					for(int i = 0; i < slots; i++) {
+						TradeDescriptor ii = inInventory[i];
+						if(ii == null) {
+							ItemStack copy = stack.copy();
+							copy.stackSize = Math.min(maxStackSize, amount);
+							amount -= copy.stackSize;
+							itemHandler.setStackInSlot(i, copy);
+							// Lock that slot for different goods
+							iiSimulation[i] = what;
+						} else if(ii.equals(what)) {
+							ItemStack inSlot = itemHandler.getStackInSlot(i);
+							int toAdd = maxStackSize - inSlot.stackSize;
+							toAdd = Math.min(toAdd, amount);
+							inSlot.stackSize += toAdd;
+							amount -= toAdd;
+							// No need to lock the slot, as the other goods will not match.
+						}
+						if(amount <= 0) {
+							break;
+						}
+					}
+				}
 			}
 		}
 	}

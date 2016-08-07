@@ -149,7 +149,7 @@ public class ContainerTraderTE extends Container {
 				goodsStacks.add(null);
 			} else {
 				ItemStack stack = td.toItemStack();
-				stack.stackSize = g.locked + g.unlocked;
+				stack.stackSize = g.amount;
 				goodsStacks.add(stack);
 			}
 		}

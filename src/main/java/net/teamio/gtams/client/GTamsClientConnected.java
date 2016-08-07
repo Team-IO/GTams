@@ -27,11 +27,29 @@ import net.teamio.gtams.client.entities.EAuthenticate;
 import net.teamio.gtams.client.entities.ETerminalCreateNew;
 import net.teamio.gtams.client.entities.ETerminalCreateTrade;
 import net.teamio.gtams.client.entities.ETerminalData;
-import net.teamio.gtams.client.entities.ETerminalGoodsAdd;
+import net.teamio.gtams.client.entities.ETerminalGoodsData;
 import net.teamio.gtams.client.entities.ETerminalOwner;
 
 public class GTamsClientConnected extends GTamsClient {
 
+
+	private static final String EP_AUTHENTICATE = "/authenticate";
+
+	private static final String EP_TERMINAL_NEW = "/terminal/new";
+	private static final String EP_TERMINAL_DESTROY = "/terminal/destroy";
+	private static final String EP_TERMINAL_STATUS = "/terminal/status";
+	private static final String EP_TERMINAL_OWNER = "/terminal/owner";
+
+	private static final String EP_TERMINAL_TRADES = "/terminal/trades";
+	private static final String EP_TERMINAL_TRADES_ADD = "/terminal/trades/add";
+	private static final String EP_TERMINAL_TRADES_REMOVE = "/terminal/trades/remove";
+	private static final String EP_TERMINAL_GOODS = "/terminal/goods";
+	private static final String EP_TERMINAL_GOODS_ADD = "/terminal/goods/add";
+	private static final String EP_TERMINAL_GOODS_REMOVE = "/terminal/goods/remove";
+
+	private static final String EP_PLAYER_STATUS = "/player/status";
+	private static final String EP_MARKET_QUERY = "/market/query";
+	private static final String EP_MARKET_GOODS = "/market/goods";
 
 	public static void main(String[] args) throws GTamsException {
 		// Client test
@@ -148,7 +166,7 @@ public class GTamsClientConnected extends GTamsClient {
 	public void authenticate() throws GTamsException {
 		if(Config.client_token == null) {
 
-			EAuthenticate ent = doRequestGET(EAuthenticate.class, "/authenticate");
+			EAuthenticate ent = doRequestGET(EAuthenticate.class, EP_AUTHENTICATE);
 			Config.client_token = ent.token;
 		}
 	}
@@ -157,7 +175,7 @@ public class GTamsClientConnected extends GTamsClient {
 	public void notifyTerminalOnline(TradeTerminal terminal) {
 		if(terminal.id != null) {
 			try {
-				doRequestPOST(Void.class, "/terminal_status", new ETerminalData(terminal.id, true));
+				doRequestPOST(Void.class, EP_TERMINAL_STATUS, new ETerminalData(terminal.id, true));
 			} catch (GTamsException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -169,7 +187,7 @@ public class GTamsClientConnected extends GTamsClient {
 	public void notifyTerminalOffline(TradeTerminal terminal) {
 		if(terminal.id != null) {
 			try {
-				doRequestPOST(Void.class, "/terminal_status", new ETerminalData(terminal.id, false));
+				doRequestPOST(Void.class, EP_TERMINAL_STATUS, new ETerminalData(terminal.id, false));
 			} catch (GTamsException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -182,7 +200,7 @@ public class GTamsClientConnected extends GTamsClient {
 		synchronized (sync_object) {
 			ETerminalData ent;
 			try {
-				ent = doRequestPOST(ETerminalData.class, "/newterminal", new ETerminalCreateNew(terminal.owner.persistentID));
+				ent = doRequestPOST(ETerminalData.class, EP_TERMINAL_NEW, new ETerminalCreateNew(terminal.owner.persistentID));
 				terminal.id = ent.id;
 				if(!terminal.isOnline) {
 					destroyTerminal(terminal);
@@ -198,7 +216,7 @@ public class GTamsClientConnected extends GTamsClient {
 	public void destroyTerminal(TradeTerminal terminal) {
 		synchronized (sync_object) {
 			try {
-				doRequestPOST(Void.class, "/destroyterminal", new ETerminalData(terminal.id, false));
+				doRequestPOST(Void.class, EP_TERMINAL_DESTROY, new ETerminalData(terminal.id, false));
 			} catch (GTamsException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -209,7 +227,7 @@ public class GTamsClientConnected extends GTamsClient {
 	@Override
 	public void notifyClientOffline(Owner owner) {
 		try {
-			doRequestPOST(Void.class, "/player_status", new ETerminalData(owner.persistentID, false));
+			doRequestPOST(Void.class, EP_PLAYER_STATUS, new ETerminalData(owner.persistentID, false));
 		} catch (GTamsException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -219,7 +237,7 @@ public class GTamsClientConnected extends GTamsClient {
 	@Override
 	public void notifyClientOnline(Owner owner) {
 		try {
-			doRequestPOST(Void.class, "/player_status", new ETerminalData(owner.persistentID, true));
+			doRequestPOST(Void.class, EP_PLAYER_STATUS, new ETerminalData(owner.persistentID, true));
 		} catch (GTamsException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -230,7 +248,7 @@ public class GTamsClientConnected extends GTamsClient {
 	public void changeTerminalOwner(TradeTerminal tradeTerminal, Owner newOwner) {
 		//TODO: what to do with not fully registered terminals? id == null!
 		try {
-			doRequestPOST(Void.class, "/terminal_owner", new ETerminalOwner(tradeTerminal.id, newOwner.persistentID));
+			doRequestPOST(Void.class, EP_TERMINAL_OWNER, new ETerminalOwner(tradeTerminal.id, newOwner.persistentID));
 		} catch (GTamsException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -240,7 +258,7 @@ public class GTamsClientConnected extends GTamsClient {
 	public TradeInfo getTradeInfo(TradeDescriptor tradeDescriptor) {
 		TradeInfo ti = null;
 		try {
-			ti = doRequestPOST(TradeInfo.class, "/trade", tradeDescriptor);
+			ti = doRequestPOST(TradeInfo.class, EP_MARKET_QUERY, tradeDescriptor);
 			ti.trade = tradeDescriptor;
 		} catch (GTamsException e) {
 			// TODO Auto-generated catch block
@@ -253,7 +271,7 @@ public class GTamsClientConnected extends GTamsClient {
 	public TradeList getTrades(TradeTerminal terminal) {
 		TradeList tl = null;
 		try {
-			tl = doRequestPOST(TradeList.class, "/terminal_trades", new ETerminalData(terminal.id, true));
+			tl = doRequestPOST(TradeList.class, EP_TERMINAL_TRADES, new ETerminalData(terminal.id, true));
 		} catch (GTamsException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -265,7 +283,7 @@ public class GTamsClientConnected extends GTamsClient {
 	public TradeList createTrade(TradeTerminal terminal, Trade trade) {
 		TradeList tl = null;
 		try {
-			tl = doRequestPOST(TradeList.class, "/terminal_newtrade", new ETerminalCreateTrade(terminal.id, trade));
+			tl = doRequestPOST(TradeList.class, EP_TERMINAL_TRADES_ADD, new ETerminalCreateTrade(terminal.id, trade));
 		} catch (GTamsException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -277,7 +295,7 @@ public class GTamsClientConnected extends GTamsClient {
 	public GoodsList getGoods(TradeTerminal terminal) {
 		GoodsList gl = null;
 		try {
-			gl = doRequestPOST(GoodsList.class, "/terminal_goods", new ETerminalData(terminal.id, true));
+			gl = doRequestPOST(GoodsList.class, EP_TERMINAL_GOODS, new ETerminalData(terminal.id, true));
 		} catch (GTamsException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -286,12 +304,26 @@ public class GTamsClientConnected extends GTamsClient {
 	}
 
 	@Override
-	public void addGoods(TradeTerminal terminal, GoodsList gl) {
+	public GoodsList addGoods(TradeTerminal terminal, GoodsList request) {
+		GoodsList gl = null;
 		try {
-			doRequestPOST(Void.class, "/terminal_goods_add", new ETerminalGoodsAdd(terminal.id, gl.goods));
+			gl = doRequestPOST(GoodsList.class, EP_TERMINAL_GOODS_ADD, new ETerminalGoodsData(terminal.id, request.goods));
 		} catch (GTamsException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		return gl;
+	}
+
+	@Override
+	public GoodsList removeGoods(TradeTerminal terminal, GoodsList request) {
+		GoodsList gl = null;
+		try {
+			gl = doRequestPOST(GoodsList.class, EP_TERMINAL_GOODS_REMOVE, new ETerminalGoodsData(terminal.id, request.goods));
+		} catch (GTamsException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return gl;
 	}
 }

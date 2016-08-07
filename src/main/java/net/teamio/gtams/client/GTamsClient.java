@@ -56,6 +56,8 @@ public abstract class GTamsClient {
 
 	public abstract GoodsList getGoods(TradeTerminal terminal);
 
-	public abstract void addGoods(TradeTerminal terminal, GoodsList gl);
+	public abstract GoodsList addGoods(TradeTerminal terminal, GoodsList gl);
+
+	public abstract GoodsList removeGoods(TradeTerminal terminal, GoodsList request);
 
 }
