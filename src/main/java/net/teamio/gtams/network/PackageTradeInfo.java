@@ -21,8 +21,6 @@ public class PackageTradeInfo implements IMessage {
 			Container container = ctx.getServerHandler().playerEntity.openContainer;
 			PackageTradeInfo response;
 			if(container instanceof ContainerTraderTE) {
-				ContainerTraderTE ctte = (ContainerTraderTE)container;
-
 				TradeInfo ti = GTams.gtamsClient.getTradeInfo(new TradeDescriptor(message.stack));
 
 				response = new PackageTradeInfo(ti);

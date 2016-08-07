@@ -7,18 +7,20 @@ import java.util.Set;
 import java.util.UUID;
 
 import net.teamio.gtams.client.GTamsClient;
+import net.teamio.gtams.client.tasks.TaskRefreshPlayerInfo;
 
-public class Owner {
+public class Owner extends Player {
 
 	private final Map<UUID, TradeTerminal> terminalCache;
 	private final Set<TradeTerminal> onlineTerminals;
 
-	public final UUID persistentID;
 	public final GTamsClient client;
+
+	public TaskRefreshPlayerInfo refreshTask;
 
 	public Owner(GTamsClient client, UUID persistentID) {
 		this.client = client;
-		this.persistentID = persistentID;
+		this.id = persistentID;
 		terminalCache = new HashMap<>();
 		onlineTerminals = new HashSet<>();
 	}

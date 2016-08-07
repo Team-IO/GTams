@@ -13,46 +13,62 @@ import net.teamio.gtams.GTams;
 import net.teamio.gtams.client.entities2.Goods;
 import net.teamio.gtams.client.entities2.GoodsList;
 import net.teamio.gtams.client.entities2.Mode;
+import net.teamio.gtams.client.entities2.Player;
 import net.teamio.gtams.client.entities2.Trade;
 import net.teamio.gtams.client.entities2.TradeDescriptor;
 import net.teamio.gtams.client.entities2.TradeList;
+import net.teamio.gtams.client.entities2.TradeTerminal;
 import net.teamio.gtams.gui.ContainerTraderTE;
 
-public class PackageTradeData implements IMessage {
+public class PackageTerminalData implements IMessage {
 
-	public static final class HandlerServer implements IMessageHandler<PackageTradeRequest, PackageTradeData> {
+	public static final class HandlerServer implements IMessageHandler<PackageTerminalDataRequest, PackageTerminalData> {
 
 		@Override
-		public PackageTradeData onMessage(PackageTradeRequest message, MessageContext ctx) {
+		public PackageTerminalData onMessage(PackageTerminalDataRequest message, MessageContext ctx) {
 			Container container = ctx.getServerHandler().playerEntity.openContainer;
 			if (container instanceof ContainerTraderTE) {
 				ContainerTraderTE ctte = (ContainerTraderTE) container;
+				TradeTerminal terminal = ctte.trader.getTerminal();
+
+				if(terminal == null) {
+					return new PackageTerminalData();
+				}
+
 				TradeList tl = ctte.trader.tradesCache;
 				if (tl == null)
-					tl = GTams.gtamsClient.getTrades(ctte.trader.getTerminal());
+					tl = GTams.gtamsClient.getTrades(terminal);
 				if (tl == null)
 					tl = new TradeList();
+
 				GoodsList gl = ctte.trader.goodsCache;
 				if (gl == null)
-					gl = GTams.gtamsClient.getGoods(ctte.trader.getTerminal());
+					gl = GTams.gtamsClient.getGoods(terminal);
 				if (gl == null)
 					gl = new GoodsList();
 
-				return new PackageTradeData(tl.trades, gl.goods);
+				Player playerInfo = null;
+				if(terminal.owner != null) {
+					playerInfo = GTams.gtamsClient.getOwner(terminal.owner.id);
+				}
+
+				return new PackageTerminalData(tl.trades, gl.goods, playerInfo);
 			}
-			return new PackageTradeData();
+			return new PackageTerminalData();
 		}
 	}
 
-	public static final class HandlerClient implements IMessageHandler<PackageTradeData, IMessage> {
+	public static final class HandlerClient implements IMessageHandler<PackageTerminalData, IMessage> {
 
 		@Override
-		public IMessage onMessage(PackageTradeData message, MessageContext ctx) {
+		public IMessage onMessage(PackageTerminalData message, MessageContext ctx) {
 			Container container = Minecraft.getMinecraft().thePlayer.openContainer;
 			if (container instanceof ContainerTraderTE) {
 
-				((ContainerTraderTE) container).setTrades(message.trades);
-				((ContainerTraderTE) container).setGoods(message.goods);
+				ContainerTraderTE ctte = (ContainerTraderTE) container;
+				ctte.setTrades(message.trades);
+				ctte.setGoods(message.goods);
+				ctte.setPlayerInfo(message.playerInfo);
 			} else {
 				// TODO: Log
 				System.out.println("Wrong container open");
@@ -64,21 +80,27 @@ public class PackageTradeData implements IMessage {
 
 	public final ArrayList<Trade> trades;
 	public final ArrayList<Goods> goods;
+	public final Player playerInfo;
 
-	public PackageTradeData() {
+	public PackageTerminalData() {
 		trades = new ArrayList<>();
 		goods = new ArrayList<>();
+		playerInfo = new Player();
 	}
 
-	public PackageTradeData(ArrayList<Trade> trades, ArrayList<Goods> goods) {
+	public PackageTerminalData(ArrayList<Trade> trades, ArrayList<Goods> goods, Player playerInfo) {
 		if (goods == null) {
 			goods = new ArrayList<>();
 		}
 		if (trades == null) {
 			trades = new ArrayList<>();
 		}
+		if(playerInfo == null) {
+			playerInfo = new Player();
+		}
 		this.trades = trades;
 		this.goods = goods;
+		this.playerInfo = playerInfo;
 	}
 
 	@Override
@@ -86,6 +108,20 @@ public class PackageTradeData implements IMessage {
 		PacketBuffer packetBuffer = new PacketBuffer(buf);
 
 		try {
+			boolean hasPlayerInfo = packetBuffer.readBoolean();
+			if(hasPlayerInfo) {
+				playerInfo.id = packetBuffer.readUuid();
+				playerInfo.funds = packetBuffer.readLong();
+				if(playerInfo.name == null) {
+					playerInfo.name = "<??>";
+				}
+				playerInfo.name = packetBuffer.readStringFromBuffer(255);
+			} else {
+				playerInfo.id = null;
+				playerInfo.funds = 0;
+				playerInfo.name = "<??>";
+			}
+
 			trades.clear();
 			int length = packetBuffer.readInt();
 			trades.ensureCapacity(length);
@@ -137,6 +173,17 @@ public class PackageTradeData implements IMessage {
 		PacketBuffer packetBuffer = new PacketBuffer(buf);
 
 		try {
+			boolean hasPlayerInfo = playerInfo.id != null;
+			packetBuffer.writeBoolean(hasPlayerInfo);
+			if(hasPlayerInfo) {
+				packetBuffer.writeUuid(playerInfo.id);
+				packetBuffer.writeLong(playerInfo.funds);
+				if(playerInfo.name == null) {
+					playerInfo.name = "<??>";
+				}
+				packetBuffer.writeString(playerInfo.name);
+			}
+
 			packetBuffer.writeInt(trades.size());
 			for (Trade off : trades) {
 				boolean hasTradeDescriptor = off.descriptor != null;

@@ -9,26 +9,34 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.teamio.gtams.GTams;
 import net.teamio.gtams.client.entities2.GoodsList;
 import net.teamio.gtams.client.entities2.Mode;
+import net.teamio.gtams.client.entities2.Player;
 import net.teamio.gtams.client.entities2.Trade;
 import net.teamio.gtams.client.entities2.TradeDescriptor;
 import net.teamio.gtams.client.entities2.TradeList;
+import net.teamio.gtams.client.entities2.TradeTerminal;
 import net.teamio.gtams.gui.ContainerTraderTE;
 
 public class PackageNewTradeRequest implements IMessage {
 
-	public static final class HandlerServer implements IMessageHandler<PackageNewTradeRequest, PackageTradeData> {
+	public static final class HandlerServer implements IMessageHandler<PackageNewTradeRequest, PackageTerminalData> {
 
 		@Override
-		public PackageTradeData onMessage(PackageNewTradeRequest message, MessageContext ctx) {
+		public PackageTerminalData onMessage(PackageNewTradeRequest message, MessageContext ctx) {
 			Container container = ctx.getServerHandler().playerEntity.openContainer;
-			PackageTradeData response;
+			PackageTerminalData response;
 			if (container instanceof ContainerTraderTE) {
 				ContainerTraderTE ctte = (ContainerTraderTE) container;
-				TradeList tl = GTams.gtamsClient.createTrade(ctte.trader.getTerminal(), message.trade);
-				GoodsList gl = GTams.gtamsClient.getGoods(ctte.trader.getTerminal());
-				response = new PackageTradeData(tl.trades, gl.goods);
+				TradeTerminal terminal = ctte.trader.getTerminal();
+				TradeList tl = GTams.gtamsClient.createTrade(terminal, message.trade);
+				GoodsList gl = GTams.gtamsClient.getGoods(terminal);
+
+				Player playerInfo = null;
+				if(terminal.owner != null) {
+					playerInfo = GTams.gtamsClient.getOwner(terminal.owner.id);
+				}
+				response = new PackageTerminalData(tl.trades, gl.goods, playerInfo);
 			} else {
-				response = new PackageTradeData();
+				response = new PackageTerminalData();
 			}
 			return response;
 		}

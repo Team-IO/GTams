@@ -30,6 +30,7 @@ import net.teamio.gtams.client.entities.ETerminalGoodsData;
 import net.teamio.gtams.client.entities.ETerminalOwner;
 import net.teamio.gtams.client.entities2.GoodsList;
 import net.teamio.gtams.client.entities2.Owner;
+import net.teamio.gtams.client.entities2.Player;
 import net.teamio.gtams.client.entities2.Trade;
 import net.teamio.gtams.client.entities2.TradeDescriptor;
 import net.teamio.gtams.client.entities2.TradeInfo;
@@ -53,6 +54,7 @@ public class GTamsClientConnected extends GTamsClient {
 	private static final String EP_TERMINAL_GOODS_ADD = "/terminal/goods/add";
 	private static final String EP_TERMINAL_GOODS_REMOVE = "/terminal/goods/remove";
 
+	private static final String EP_PLAYER = "/player";
 	private static final String EP_PLAYER_STATUS = "/player/status";
 	private static final String EP_MARKET_QUERY = "/market/query";
 	private static final String EP_MARKET_GOODS = "/market/goods";
@@ -216,7 +218,7 @@ public class GTamsClientConnected extends GTamsClient {
 		synchronized (sync_object) {
 			ETerminalData ent;
 			try {
-				ent = doRequestPOST(ETerminalData.class, EP_TERMINAL_NEW, new ETerminalCreateNew(terminal.owner.persistentID));
+				ent = doRequestPOST(ETerminalData.class, EP_TERMINAL_NEW, new ETerminalCreateNew(terminal.owner.id));
 				terminal.id = ent.id;
 				if(!terminal.isOnline) {
 					destroyTerminal(terminal);
@@ -243,7 +245,7 @@ public class GTamsClientConnected extends GTamsClient {
 	@Override
 	public void notifyClientOffline(Owner owner) {
 		try {
-			doRequestPOST(Void.class, EP_PLAYER_STATUS, new ETerminalData(owner.persistentID, false));
+			doRequestPOST(Void.class, EP_PLAYER_STATUS, new ETerminalData(owner.id, false));
 		} catch (GTamsException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -253,7 +255,20 @@ public class GTamsClientConnected extends GTamsClient {
 	@Override
 	public void notifyClientOnline(Owner owner) {
 		try {
-			doRequestPOST(Void.class, EP_PLAYER_STATUS, new ETerminalData(owner.persistentID, true));
+			doRequestPOST(Void.class, EP_PLAYER_STATUS, new ETerminalData(owner.id, true));
+		} catch (GTamsException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	@Override
+	public void updateOwnerInfo(Owner owner) {
+		try {
+			Player info = doRequestPOST(Player.class, EP_PLAYER, new ETerminalData(owner.id, true));
+			if(info != null) {
+				owner.funds = info.funds;
+			}
 		} catch (GTamsException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -264,7 +279,7 @@ public class GTamsClientConnected extends GTamsClient {
 	public void changeTerminalOwner(TradeTerminal tradeTerminal, Owner newOwner) {
 		//TODO: what to do with not fully registered terminals? id == null!
 		try {
-			doRequestPOST(Void.class, EP_TERMINAL_OWNER, new ETerminalOwner(tradeTerminal.id, newOwner.persistentID));
+			doRequestPOST(Void.class, EP_TERMINAL_OWNER, new ETerminalOwner(tradeTerminal.id, newOwner.id));
 		} catch (GTamsException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -287,7 +302,9 @@ public class GTamsClientConnected extends GTamsClient {
 	public TradeList getTrades(TradeTerminal terminal) {
 		TradeList tl = null;
 		try {
-			tl = doRequestPOST(TradeList.class, EP_TERMINAL_TRADES, new ETerminalData(terminal.id, true));
+			if(terminal != null) {
+				tl = doRequestPOST(TradeList.class, EP_TERMINAL_TRADES, new ETerminalData(terminal.id, true));
+			}
 		} catch (GTamsException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

@@ -53,10 +53,6 @@ public class TraderTE extends TileEntity implements ITickable {
 			return;
 		}
 		setOwner(ownerId);
-
-		//TODO: Make these as background tasks with retry & cancellable when unloaded
-		tradesCache = GTams.gtamsClient.getTrades(terminal);
-		goodsCache = GTams.gtamsClient.getGoods(terminal);
 	}
 
 	@Override
@@ -117,19 +113,21 @@ public class TraderTE extends TileEntity implements ITickable {
 			return;
 		}
 
-		if(refreshTask == null) {
-			if(--checkTick == 0) {
-				checkTick = CHECK_TICKS;
-				refreshTask = new TaskRefreshTerminal(this);
-				GTams.gtamsClient.addTask(refreshTask);
-			}
-		} else {
-			if(refreshTask.isDone) {
-				this.tradesCache = refreshTask.tradesCache;
-				this.goodsCache = refreshTask.goodsCache;
-				refreshTask = null;
+		if(terminalId != null) {
+			if(refreshTask == null) {
+				if(--checkTick == 0) {
+					checkTick = CHECK_TICKS;
+					refreshTask = new TaskRefreshTerminal(this);
+					GTams.gtamsClient.addTask(refreshTask);
+				}
 			} else {
-				refreshTask.processSyncTasks();
+				if(refreshTask.isDone) {
+					this.tradesCache = refreshTask.tradesCache;
+					this.goodsCache = refreshTask.goodsCache;
+					refreshTask = null;
+				} else {
+					refreshTask.processSyncTasks();
+				}
 			}
 		}
 	}
@@ -153,10 +151,14 @@ public class TraderTE extends TileEntity implements ITickable {
 	@Override
 	public NBTTagCompound writeToNBT(NBTTagCompound compound) {
 		compound = super.writeToNBT(compound);
-		compound.setUniqueId("owner", ownerId);
+		if(ownerId != null) {
+			compound.setUniqueId("owner", ownerId);
+		}
 		if(terminal != null) {
 			terminalId = terminal.id;
-			compound.setUniqueId("terminal", terminalId);
+			if(terminalId != null) {
+				compound.setUniqueId("terminal", terminalId);
+			}
 		}
 		NBTTagCompound itemTag = itemHandler.serializeNBT();
 		compound.setTag("inventory", itemTag);

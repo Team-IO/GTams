@@ -12,13 +12,14 @@ import net.minecraft.item.ItemStack;
 import net.minecraftforge.items.SlotItemHandler;
 import net.teamio.gtams.GTams;
 import net.teamio.gtams.client.entities2.Goods;
+import net.teamio.gtams.client.entities2.Player;
 import net.teamio.gtams.client.entities2.Trade;
 import net.teamio.gtams.client.entities2.TradeDescriptor;
 import net.teamio.gtams.client.entities2.TradeInfo;
 import net.teamio.gtams.content.TraderTE;
 import net.teamio.gtams.network.PackageNewTradeRequest;
+import net.teamio.gtams.network.PackageTerminalDataRequest;
 import net.teamio.gtams.network.PackageTradeInfoRequest;
-import net.teamio.gtams.network.PackageTradeRequest;
 
 public class ContainerTraderTE extends Container {
 
@@ -35,6 +36,7 @@ public class ContainerTraderTE extends Container {
 	}
 
 	public SlotChangeListener onSlotChange;
+	public Player playerInfo;
 
 	public ContainerTraderTE(IInventory playerInventory, TraderTE trader) {
 		this.trader = trader;
@@ -121,7 +123,7 @@ public class ContainerTraderTE extends Container {
 	}
 
 	public void requestTrades() {
-		GTams.channel.sendToServer(new PackageTradeRequest());
+		GTams.channel.sendToServer(new PackageTerminalDataRequest());
 	}
 
 	public void requestTradeInfo(ItemStack stack) {
@@ -153,6 +155,10 @@ public class ContainerTraderTE extends Container {
 				goodsStacks.add(stack);
 			}
 		}
+	}
+
+	public void setPlayerInfo(Player player) {
+		this.playerInfo = player;
 	}
 
 }

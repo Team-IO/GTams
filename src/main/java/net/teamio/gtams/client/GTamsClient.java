@@ -14,6 +14,7 @@ import net.teamio.gtams.client.entities2.Owner;
 import net.teamio.gtams.client.entities2.Trade;
 import net.teamio.gtams.client.entities2.TradeList;
 import net.teamio.gtams.client.entities2.TradeTerminal;
+import net.teamio.gtams.client.tasks.TaskRefreshPlayerInfo;
 
 public abstract class GTamsClient {
 
@@ -40,13 +41,20 @@ public abstract class GTamsClient {
 				owners.put(id, owner);
 				notifyClientOnline(owner);
 			}
+			if(owner.refreshTask == null ||
+				(owner.refreshTask.isDone &&
+				(System.currentTimeMillis() - owner.refreshTask.lastUpdate) > 2000
+				)) {
+				owner.refreshTask = new TaskRefreshPlayerInfo(owner);
+				addTask(owner.refreshTask);
+			}
 			return owner;
 		}
 	}
 
 	public void logoffOwner(Owner owner) {
 		synchronized(sync_object) {
-			owners.remove(owner.persistentID);
+			owners.remove(owner.id);
 			notifyClientOffline(owner);
 		}
 	}
@@ -82,5 +90,7 @@ public abstract class GTamsClient {
 	}
 
 	public abstract GoodsList removeGoods(TradeTerminal terminal, GoodsList request);
+
+	public abstract void updateOwnerInfo(Owner owner);
 
 }

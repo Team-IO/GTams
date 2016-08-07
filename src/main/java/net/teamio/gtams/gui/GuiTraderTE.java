@@ -208,6 +208,8 @@ public class GuiTraderTE extends GuiContainer {
 	private Badge badgePrice;
 	private Badge badgeAmount;
 	private Badge badgeWarning;
+	private int refreshTicker;
+	private Badge badgeFunds;
 
 	public GuiTraderTE(ContainerTraderTE conta) {
 		super(conta);
@@ -310,8 +312,12 @@ public class GuiTraderTE extends GuiContainer {
 		buttonList.add(cbModeRecurring);
 		buttonList.add(cbModeInfinite);
 
-		List<String> textLines = Lists.newArrayList("Price", "Minecoins", "Junktext");
+		List<String> textLines = Lists.newArrayList("Price", "Minecoins");
 		badgePrice = new Badge(txtPrice.xPosition - 10, txtPrice.yPosition + 1, 0, 0, 8, textLines);
+
+		textLines = Lists.newArrayList("Your current balance", "Minecoins");
+		badgeFunds = new Badge(guiLeft + 8, guiTop + 6, 0, 0, 8, textLines);
+		badgeFunds.visible = false;
 
 		textLines = Lists.newArrayList("Amount");
 		badgeAmount = new Badge(txtAmount.xPosition - 10, txtAmount.yPosition + 1, 1, 0, 8, textLines);
@@ -319,6 +325,7 @@ public class GuiTraderTE extends GuiContainer {
 		badgeWarning = new Badge(btnCreateTrade.xPosition - 10, btnCreateTrade.yPosition + 6, 0, 1, 8, new ArrayList<String>());
 		badgeWarning.visible = false;
 
+		badges.add(badgeFunds);
 		badges.add(badgePrice);
 		badges.add(badgeAmount);
 		badges.add(badgeWarning);
@@ -335,6 +342,11 @@ public class GuiTraderTE extends GuiContainer {
 	public void updateScreen() {
 		super.updateScreen();
 		txtPrice.updateCursorCounter();
+
+		if(++this.refreshTicker > 20) {
+			refreshTicker = 0;
+			container.requestTrades();
+		}
 	}
 
 	@Override
@@ -488,6 +500,23 @@ public class GuiTraderTE extends GuiContainer {
 		drawString(fontRendererObj, "Inventory", guiLeft + 8, guiTop + 162, 0xFFFFFF);
 		if(!isEditingTrade) {
 			drawString(fontRendererObj, "Active Trades:", guiLeft + 8, guiTop + 16, 0xFFFFFF);
+		}
+
+		if(container.playerInfo != null) {
+			String text;
+			int txtWidth;
+			if(this.mc.thePlayer.getPersistentID().equals(container.playerInfo.id)) {
+				text = Long.toString(container.playerInfo.funds);
+				txtWidth = fontRendererObj.getStringWidth(text);
+				drawString(fontRendererObj, text, guiLeft + 18, guiTop + 6, 0xFFFFFF);
+				text = "This terminal belongs to you.";
+				badgeFunds.visible = true;
+			} else {
+				text = "Owner: " + container.playerInfo.name;
+				badgeFunds.visible = false;
+			}
+			txtWidth = fontRendererObj.getStringWidth(text);
+			drawString(fontRendererObj, text, guiLeft + 256 - txtWidth - 8, guiTop + 162, 0xFFFFFF);
 		}
 
 		for(Badge badge : badges) {
