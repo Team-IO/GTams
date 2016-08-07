@@ -187,11 +187,20 @@ public class GTamsClientConnected extends GTamsClient {
 	}
 
 	public void authenticate() throws GTamsException {
-		if(Config.client_token == null) {
+		addTask(new Task() {
 
-			EAuthenticate ent = doRequestGET(EAuthenticate.class, EP_AUTHENTICATE);
-			Config.client_token = ent.token;
-		}
+			@Override
+			public void process() throws GTamsException {
+				if(Config.getClientToken().isEmpty()) {
+					EAuthenticate ent = doRequestGET(EAuthenticate.class, EP_AUTHENTICATE);
+					Config.setClientToken(ent.token);
+				}
+			}
+
+			@Override
+			protected void doInSync() throws GTamsException {
+			}
+		});
 	}
 
 	@Override

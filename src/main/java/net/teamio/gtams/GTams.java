@@ -1,9 +1,9 @@
 package net.teamio.gtams;
 
 import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.Mod.Instance;
@@ -40,14 +40,17 @@ public class GTams {
 	@EventHandler
 	public void preInit(FMLPreInitializationEvent event) {
 
-		CreativeTabs creativeTab = new CreativeTabs("taam.creativetab") {
+		// For config-reload event. not needed yet, but meh...
+		MinecraftForge.EVENT_BUS.register(new Config());
 
+
+		Config.loadConfig(event.getSuggestedConfigurationFile(), event.getModConfigurationDirectory());
+
+		CreativeTabs creativeTab = new CreativeTabs("taam.creativetab") {
 			@Override
 			public Item getTabIconItem() {
-				// TODO Auto-generated method stub
-				return Items.BOOK;
+				return itemTrader;
 			}
-
 		};
 
 		blockTrader = new TraderBlock();
