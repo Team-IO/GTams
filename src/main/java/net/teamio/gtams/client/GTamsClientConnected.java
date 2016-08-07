@@ -23,9 +23,11 @@ import com.google.gson.GsonBuilder;
 
 import net.teamio.gtams.Config;
 import net.teamio.gtams.client.entities.EAuthenticate;
+import net.teamio.gtams.client.entities.EPlayerData;
 import net.teamio.gtams.client.entities.ETerminalCreateNew;
 import net.teamio.gtams.client.entities.ETerminalCreateTrade;
 import net.teamio.gtams.client.entities.ETerminalData;
+import net.teamio.gtams.client.entities.ETerminalDeleteTrade;
 import net.teamio.gtams.client.entities.ETerminalGoodsData;
 import net.teamio.gtams.client.entities.ETerminalOwner;
 import net.teamio.gtams.client.entities2.GoodsList;
@@ -196,7 +198,7 @@ public class GTamsClientConnected extends GTamsClient {
 	public void notifyTerminalOnline(TradeTerminal terminal) {
 		if(terminal.id != null) {
 			try {
-				doRequestPOST(Void.class, EP_TERMINAL_STATUS, new ETerminalData(terminal.id, true));
+				doRequestPOST(Void.class, EP_TERMINAL_STATUS, new ETerminalData(terminal.id, terminal.getOwnerId(), true));
 			} catch (GTamsException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -208,7 +210,7 @@ public class GTamsClientConnected extends GTamsClient {
 	public void notifyTerminalOffline(TradeTerminal terminal) {
 		if(terminal.id != null) {
 			try {
-				doRequestPOST(Void.class, EP_TERMINAL_STATUS, new ETerminalData(terminal.id, false));
+				doRequestPOST(Void.class, EP_TERMINAL_STATUS, new ETerminalData(terminal.id, terminal.getOwnerId(), false));
 			} catch (GTamsException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -237,7 +239,7 @@ public class GTamsClientConnected extends GTamsClient {
 	public void destroyTerminal(TradeTerminal terminal) {
 		synchronized (sync_object) {
 			try {
-				doRequestPOST(Void.class, EP_TERMINAL_DESTROY, new ETerminalData(terminal.id, false));
+				doRequestPOST(Void.class, EP_TERMINAL_DESTROY, new ETerminalData(terminal.id, terminal.getOwnerId(), false));
 			} catch (GTamsException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -248,7 +250,7 @@ public class GTamsClientConnected extends GTamsClient {
 	@Override
 	public void notifyClientOffline(Owner owner) {
 		try {
-			doRequestPOST(Void.class, EP_PLAYER_STATUS, new ETerminalData(owner.id, false));
+			doRequestPOST(Void.class, EP_PLAYER_STATUS, new EPlayerData(owner.id, false));
 		} catch (GTamsException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -258,7 +260,7 @@ public class GTamsClientConnected extends GTamsClient {
 	@Override
 	public void notifyClientOnline(Owner owner) {
 		try {
-			doRequestPOST(Void.class, EP_PLAYER_STATUS, new ETerminalData(owner.id, true));
+			doRequestPOST(Void.class, EP_PLAYER_STATUS, new EPlayerData(owner.id, true));
 		} catch (GTamsException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -268,7 +270,7 @@ public class GTamsClientConnected extends GTamsClient {
 	@Override
 	public void updateOwnerInfo(Owner owner) {
 		try {
-			Player info = doRequestPOST(Player.class, EP_PLAYER, new ETerminalData(owner.id, true));
+			Player info = doRequestPOST(Player.class, EP_PLAYER, new EPlayerData(owner.id, true));
 			if(info != null) {
 				owner.funds = info.funds;
 			}
@@ -306,7 +308,7 @@ public class GTamsClientConnected extends GTamsClient {
 		TradeList tl = null;
 		try {
 			if(terminal != null) {
-				tl = doRequestPOST(TradeList.class, EP_TERMINAL_TRADES, new ETerminalData(terminal.id, true));
+				tl = doRequestPOST(TradeList.class, EP_TERMINAL_TRADES, new ETerminalData(terminal.id, terminal.getOwnerId(), true));
 			}
 		} catch (GTamsException e) {
 			// TODO Auto-generated catch block
@@ -328,10 +330,22 @@ public class GTamsClientConnected extends GTamsClient {
 	}
 
 	@Override
+	public TradeList removeTrade(TradeTerminal terminal, long tradeId) {
+		TradeList tl = null;
+		try {
+			tl = doRequestPOST(TradeList.class, EP_TERMINAL_TRADES_ADD, new ETerminalDeleteTrade(terminal.id, tradeId));
+		} catch (GTamsException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return tl;
+	}
+
+	@Override
 	public GoodsList getGoods(TradeTerminal terminal) {
 		GoodsList gl = null;
 		try {
-			gl = doRequestPOST(GoodsList.class, EP_TERMINAL_GOODS, new ETerminalData(terminal.id, true));
+			gl = doRequestPOST(GoodsList.class, EP_TERMINAL_GOODS, new ETerminalData(terminal.id, terminal.getOwnerId(), true));
 		} catch (GTamsException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

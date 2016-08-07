@@ -59,6 +59,10 @@ public abstract class GTamsClient {
 		}
 	}
 
+	public void addTask(Task newTask) {
+		tp.execute(newTask);
+	}
+
 	public abstract void notifyTerminalOnline(TradeTerminal terminal);
 
 	public abstract void notifyTerminalOffline(TradeTerminal terminal);
@@ -81,13 +85,11 @@ public abstract class GTamsClient {
 
 	public abstract TradeList createTrade(TradeTerminal terminal, Trade trade);
 
+	public abstract TradeList removeTrade(TradeTerminal terminal, long tradeId);
+
 	public abstract GoodsList getGoods(TradeTerminal terminal);
 
 	public abstract GoodsList addGoods(TradeTerminal terminal, GoodsList gl);
-
-	public void addTask(Task newTask) {
-		tp.execute(newTask);
-	}
 
 	public abstract GoodsList removeGoods(TradeTerminal terminal, GoodsList request);
 

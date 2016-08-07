@@ -26,4 +26,8 @@ public class TradeTerminal {
 			owner.client.changeTerminalOwner(this, newOwner);
 		}
 	}
+
+	public UUID getOwnerId() {
+		return owner == null ? null : owner.id;
+	}
 }

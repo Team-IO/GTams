@@ -2,16 +2,17 @@ package net.teamio.gtams.client.entities;
 
 import java.util.UUID;
 
-public class EClientData {
+public class EPlayerData {
 
 	public UUID id;
+	public int funds;
 	public boolean online;
 
 	/**
 	 * @param id
 	 * @param online
 	 */
-	public EClientData(UUID id, boolean online) {
+	public EPlayerData(UUID id, boolean online) {
 		this.id = id;
 		this.online = online;
 	}
