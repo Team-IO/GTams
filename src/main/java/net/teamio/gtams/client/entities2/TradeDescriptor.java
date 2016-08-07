@@ -1,6 +1,8 @@
 package net.teamio.gtams.client.entities2;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.security.MessageDigest;
@@ -17,33 +19,37 @@ public class TradeDescriptor {
 	public String itemName;
 	public int damage;
 	public String nbtHash;
-
-	//TODO: serialized NBT instead of hash? (use hash to identify, but send nbt data as well)
+	public byte[] nbt;
 
 	public TradeDescriptor() {
 	}
 
-	/**
-	 * @param itemName
-	 * @param damage
-	 * @param nbtHash
-	 */
-	public TradeDescriptor(String itemName, int damage, String nbtHash) {
+	public TradeDescriptor(String itemName, int damage) {
+		this.itemName = itemName;
+		this.damage = damage;
+		this.nbtHash = "";
+	}
+
+	public TradeDescriptor(String itemName, int damage, String nbtHash, byte[] nbt) {
 		this.itemName = itemName;
 		this.damage = damage;
 		this.nbtHash = nbtHash;
+		this.nbt = nbt;
 	}
 
-	/**
-	 * @param itemName
-	 * @param damage
-	 * @param nbtHash
-	 */
-	public TradeDescriptor(Item item, int damage, String nbtHash) {
+	public TradeDescriptor(Item item, int damage) {
+		ResourceLocation key = Item.REGISTRY.getNameForObject(item);
+		this.itemName = key.toString();
+		this.damage = damage;
+		this.nbtHash = "";
+	}
+
+	public TradeDescriptor(Item item, int damage, String nbtHash, byte[] nbt) {
 		ResourceLocation key = Item.REGISTRY.getNameForObject(item);
 		this.itemName = key.toString();
 		this.damage = damage;
 		this.nbtHash = nbtHash;
+		this.nbt = nbt;
 	}
 
 	/**
@@ -64,7 +70,8 @@ public class TradeDescriptor {
 				md = MessageDigest.getInstance("SHA-256");
 				try(ByteArrayOutputStream bo = new ByteArrayOutputStream()) {
 					CompressedStreamTools.write(tag, new DataOutputStream(bo));
-					md.update(bo.toByteArray());
+					nbt = bo.toByteArray();
+					md.update(nbt);
 				}
 
 				byte[] digest = md.digest();
@@ -88,7 +95,17 @@ public class TradeDescriptor {
 		if(item == null) {
 			return null;
 		}
-		return new ItemStack(item, 1, damage);
+		ItemStack itemStack = new ItemStack(item, 1, damage);
+		if(nbt != null) {
+			try(ByteArrayInputStream bi = new ByteArrayInputStream(nbt)) {
+				NBTTagCompound tag = CompressedStreamTools.read(new DataInputStream(bi));
+				itemStack.setTagCompound(tag);
+			} catch (IOException e) {
+				e.printStackTrace();
+				return null;
+			}
+		}
+		return itemStack;
 	}
 
 	@Override
@@ -97,6 +114,13 @@ public class TradeDescriptor {
 			return itemName + "@" + Integer.toString(damage);
 		}
 		return itemName + "@" + Integer.toString(damage) + " +{NBT}";
+	}
+
+	public String toFilename() {
+		if(nbtHash.isEmpty()) {
+			return itemName + "@" + Integer.toString(damage);
+		}
+		return itemName + "@" + Integer.toString(damage) + "{" + nbtHash + "}";
 	}
 
 	@Override

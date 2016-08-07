@@ -80,7 +80,7 @@ public class GTamsClientConnected extends GTamsClient {
 		super();
 		this.host = host;
 		this.port = port;
-		gson = new GsonBuilder().serializeNulls().setPrettyPrinting().create();
+		gson = new GsonBuilder().serializeNulls().setPrettyPrinting().registerTypeHierarchyAdapter(byte[].class, new ByteArrayBase64Adapter()).create();
 	}
 
 	private void checkConnection() throws GTamsException {

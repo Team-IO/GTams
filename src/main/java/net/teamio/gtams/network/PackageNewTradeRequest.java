@@ -65,6 +65,10 @@ public class PackageNewTradeRequest implements IMessage {
 				trade.descriptor.itemName = packetBuffer.readStringFromBuffer(255);
 				trade.descriptor.damage = packetBuffer.readInt();
 				trade.descriptor.nbtHash = packetBuffer.readStringFromBuffer(255);
+				boolean hasNbt = packetBuffer.readBoolean();
+				if(hasNbt) {
+					trade.descriptor.nbt = packetBuffer.readByteArray();
+				}
 			}
 			trade.isBuy = packetBuffer.readBoolean();
 			trade.price = packetBuffer.readInt();
@@ -94,6 +98,11 @@ public class PackageNewTradeRequest implements IMessage {
 				packetBuffer.writeString(trade.descriptor.itemName);
 				packetBuffer.writeInt(trade.descriptor.damage);
 				packetBuffer.writeString(trade.descriptor.nbtHash);
+				boolean hasNbt = trade.descriptor.nbt != null;
+				packetBuffer.writeBoolean(hasNbt);
+				if(hasNbt) {
+					packetBuffer.writeByteArray(trade.descriptor.nbt);
+				}
 			}
 			packetBuffer.writeBoolean(trade.isBuy);
 			packetBuffer.writeInt(trade.price);
