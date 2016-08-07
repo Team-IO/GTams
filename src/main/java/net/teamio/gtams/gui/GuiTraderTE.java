@@ -3,6 +3,7 @@ package net.teamio.gtams.gui;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import org.lwjgl.input.Mouse;
 
@@ -26,6 +27,7 @@ import net.teamio.gtams.client.entities2.Mode;
 import net.teamio.gtams.client.entities2.Trade;
 import net.teamio.gtams.client.entities2.TradeDescriptor;
 import net.teamio.gtams.client.entities2.TradeInfo;
+import net.teamio.gtams.client.entities2.TradeTerminal;
 import net.teamio.gtams.gui.ContainerTraderTE.SlotChangeListener;
 
 public class GuiTraderTE extends GuiContainer {
@@ -210,6 +212,7 @@ public class GuiTraderTE extends GuiContainer {
 	private Badge badgeWarning;
 	private int refreshTicker;
 	private Badge badgeFunds;
+	private Badge badgeDebug;
 
 	public GuiTraderTE(ContainerTraderTE conta) {
 		super(conta);
@@ -251,7 +254,7 @@ public class GuiTraderTE extends GuiContainer {
 		availableOffers.registerScrollButtons(buttonList, 5, 6);
 
 		btnNewTrade = new GuiButton(BTN_NEWTRADE, guiLeft + 188, guiTop + 5, 60, 20, "New Trade");
-		btnCancel = new GuiButton(BTN_CANCEL, guiLeft + 7, guiTop + 5, 50, 20, "Cancel");
+		btnCancel = new GuiButton(BTN_CANCEL, btnNewTrade.xPosition - 55, guiTop + 5, 50, 20, "Cancel");
 		buttonList.add(btnCancel);
 		buttonList.add(btnNewTrade);
 
@@ -325,10 +328,13 @@ public class GuiTraderTE extends GuiContainer {
 		badgeWarning = new Badge(btnCreateTrade.xPosition - 10, btnCreateTrade.yPosition + 6, 0, 1, 8, new ArrayList<String>());
 		badgeWarning.visible = false;
 
+		badgeDebug = new Badge(guiLeft, guiTop + 2, 1, 1, 8, new ArrayList<String>());
+
 		badges.add(badgeFunds);
 		badges.add(badgePrice);
 		badges.add(badgeAmount);
 		badges.add(badgeWarning);
+		badges.add(badgeDebug);
 
 		txtPrice.setText(Integer.toString(price));
 		txtAmount.setText(Integer.toString(amount));
@@ -347,6 +353,24 @@ public class GuiTraderTE extends GuiContainer {
 			refreshTicker = 0;
 			container.requestTrades();
 		}
+
+		UUID playerPersistentID = mc.thePlayer.getPersistentID();
+		//TODO: For later! Also do that in updateVisibility
+//		boolean isNotPlayersOwn = container.playerInfo == null || !playerPersistentID.equals(container.playerInfo.id);
+//
+//		if(isNotPlayersOwn) {
+//			btnNewTrade.enabled = false;
+//			btnCreateTrade.enabled = false;
+//		}
+
+		TradeTerminal terminal = container.trader.getTerminal();
+		badgeDebug.hover.clear();
+		badgeDebug.hover.add("Debug Info");
+//		badgeDebug.hover.add("Terminal ID (defined): " + container.trader.terminalId);
+//		badgeDebug.hover.add("Terminal ID (loaded): " + (terminal == null ? "Terminal Not Loaded" : terminal.id));
+//		badgeDebug.hover.add("Owner ID (defined): " + container.trader.ownerId);
+		badgeDebug.hover.add("Owner ID (loaded): " + (container.playerInfo == null ? "Owner not loaded" : container.playerInfo.id));
+		badgeDebug.hover.add("Your player ID: " + playerPersistentID);
 	}
 
 	@Override
@@ -411,7 +435,6 @@ public class GuiTraderTE extends GuiContainer {
 		 * Visibility update
 		 */
 
-		btnNewTrade.visible = !isEditingTrade;
 		btnNewTrade.enabled = !isEditingTrade;
 
 		btnCancel.visible = isEditingTrade;
@@ -520,6 +543,9 @@ public class GuiTraderTE extends GuiContainer {
 		}
 
 		for(Badge badge : badges) {
+			if(badge == badgeFunds && container.playerInfo != null) {
+				badge.hover.set(1, container.playerInfo.funds + " Minecoins");
+			}
 			mc.renderEngine.bindTexture(badges_tex);
 			if(badge.visible) {
 				Gui.drawModalRectWithCustomSizedTexture(

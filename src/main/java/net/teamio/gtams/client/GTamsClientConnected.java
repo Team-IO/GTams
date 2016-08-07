@@ -126,58 +126,61 @@ public class GTamsClientConnected extends GTamsClient {
 	}
 
 	private <T> T doRequestGET(Class<T> responseEntity, String endpoint) throws GTamsException {
-		checkConnection();
-		BasicHttpRequest request = new BasicHttpRequest("GET", endpoint);
-		try {
+		synchronized(this) {
+			checkConnection();
+			BasicHttpRequest request = new BasicHttpRequest("GET", endpoint);
+			try {
 
-			executor.preProcess(request, processor, context);
-			HttpResponse response = executor.execute(request, clientConnection, context);
-			executor.postProcess(response, processor, context);
+				executor.preProcess(request, processor, context);
+				HttpResponse response = executor.execute(request, clientConnection, context);
+				executor.postProcess(response, processor, context);
 
 
-			HttpEntity entity = response.getEntity();
-			if(entity == null) {
-				return null;
+				HttpEntity entity = response.getEntity();
+				if(entity == null) {
+					return null;
+				}
+				String responseString = EntityUtils.toString(entity);
+				System.out.println("Response from server: " + responseString);
+				return gson.fromJson(responseString, responseEntity);
+			} catch (HttpException e) {
+				throw new GTamsException("Error processing HTTP response", e);
+			} catch (IOException e) {
+				throw new GTamsException("Network error when contacting server", e);
+			} catch (Exception e) {
+				throw new GTamsException("Error processing answer from server", e);
 			}
-			String responseString = EntityUtils.toString(entity);
-			System.out.println("Response from server: " + responseString);
-			return gson.fromJson(responseString, responseEntity);
-		} catch (HttpException e) {
-			throw new GTamsException("Error processing HTTP response", e);
-		} catch (IOException e) {
-			throw new GTamsException("Network error when contacting server", e);
-		} catch (Exception e) {
-			throw new GTamsException("Error processing answer from server", e);
 		}
 	}
 
 	private <T> T doRequestPOST(Class<T> responseEntity, String endpoint, Object postData) throws GTamsException {
-		checkConnection();
-		BasicHttpEntityEnclosingRequest request = new BasicHttpEntityEnclosingRequest("POST", endpoint);
+		synchronized(this) {
+			checkConnection();
+			BasicHttpEntityEnclosingRequest request = new BasicHttpEntityEnclosingRequest("POST", endpoint);
+
+			try {
+				String postJson = gson.toJson(postData);
+				request.setEntity(new StringEntity(postJson));
+
+				executor.preProcess(request, processor, context);
+				HttpResponse response = executor.execute(request, clientConnection, context);
+				executor.postProcess(response, processor, context);
 
 
-		try {
-			String postJson = gson.toJson(postData);
-			request.setEntity(new StringEntity(postJson));
-
-			executor.preProcess(request, processor, context);
-			HttpResponse response = executor.execute(request, clientConnection, context);
-			executor.postProcess(response, processor, context);
-
-
-			HttpEntity entity = response.getEntity();
-			if(entity == null) {
-				return null;
+				HttpEntity entity = response.getEntity();
+				if(entity == null) {
+					return null;
+				}
+				String responseString = EntityUtils.toString(entity);
+				System.out.println("Response from server: " + responseString);
+				return gson.fromJson(responseString, responseEntity);
+			} catch (HttpException e) {
+				throw new GTamsException("Error processing HTTP response", e);
+			} catch (IOException e) {
+				throw new GTamsException("Network error when contacting server", e);
+			} catch (Exception e) {
+				throw new GTamsException("Error processing answer from server", e);
 			}
-			String responseString = EntityUtils.toString(entity);
-			System.out.println("Response from server: " + responseString);
-			return gson.fromJson(responseString, responseEntity);
-		} catch (HttpException e) {
-			throw new GTamsException("Error processing HTTP response", e);
-		} catch (IOException e) {
-			throw new GTamsException("Network error when contacting server", e);
-		} catch (Exception e) {
-			throw new GTamsException("Error processing answer from server", e);
 		}
 	}
 

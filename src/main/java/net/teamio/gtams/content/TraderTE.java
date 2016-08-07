@@ -18,8 +18,8 @@ import net.teamio.gtams.client.tasks.TaskRefreshTerminal;
 
 public class TraderTE extends TileEntity implements ITickable {
 
-	private UUID ownerId;
-	private UUID terminalId;
+	public UUID ownerId;
+	public UUID terminalId;
 	private Owner owner;
 	private TradeTerminal terminal;
 
