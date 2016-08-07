@@ -29,7 +29,7 @@ public class PackageTerminalData implements IMessage {
 			Container container = ctx.getServerHandler().playerEntity.openContainer;
 			if (container instanceof ContainerTraderTE) {
 				ContainerTraderTE ctte = (ContainerTraderTE) container;
-				TradeTerminal terminal = ctte.trader.getTerminal();
+				TradeTerminal terminal = ctte.trader.terminal;
 
 				if(terminal == null) {
 					return new PackageTerminalData();

@@ -14,14 +14,16 @@ import net.teamio.gtams.client.entities2.GoodsList;
 import net.teamio.gtams.client.entities2.Owner;
 import net.teamio.gtams.client.entities2.TradeList;
 import net.teamio.gtams.client.entities2.TradeTerminal;
+import net.teamio.gtams.client.tasks.TaskLogoffTerminal;
+import net.teamio.gtams.client.tasks.TaskLogonTerminal;
 import net.teamio.gtams.client.tasks.TaskRefreshTerminal;
 
 public class TraderTE extends TileEntity implements ITickable {
 
 	public UUID ownerId;
 	public UUID terminalId;
-	private Owner owner;
-	private TradeTerminal terminal;
+	public Owner owner;
+	public TradeTerminal terminal;
 
 	public final ItemStackHandler itemHandler;
 
@@ -38,12 +40,7 @@ public class TraderTE extends TileEntity implements ITickable {
 		}
 		if(ownerId != null) {
 			this.ownerId = ownerId;
-			this.owner = GTams.gtamsClient.getOwner(ownerId);
-			if(terminal == null) {
-				terminal = owner.getTerminal(terminalId);
-			} else {
-				terminal.transferOwner(owner);
-			}
+			GTams.gtamsClient.addTask(new TaskLogonTerminal(this));
 		}
 	}
 
@@ -61,8 +58,10 @@ public class TraderTE extends TileEntity implements ITickable {
 			return;
 		}
 		if(ownerId != null) {
-			owner.terminalOffline(terminal);
-			terminalId = terminal.id;
+			if(terminal != null) {
+				terminalId = terminal.id;
+			}
+			GTams.gtamsClient.addTask(new TaskLogoffTerminal(this, false));
 			terminal = null;
 			owner = null;
 		}
@@ -77,13 +76,9 @@ public class TraderTE extends TileEntity implements ITickable {
 		if(worldObj.isRemote) {
 			return;
 		}
-		owner.terminalDestroyed(terminal);
+		GTams.gtamsClient.addTask(new TaskLogoffTerminal(this, true));
 		terminal = null;
 		owner = null;
-	}
-
-	public TradeTerminal getTerminal() {
-		return terminal;
 	}
 
 	@Override

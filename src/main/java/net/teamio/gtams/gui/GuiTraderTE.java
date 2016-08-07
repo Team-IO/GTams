@@ -27,7 +27,6 @@ import net.teamio.gtams.client.entities2.Mode;
 import net.teamio.gtams.client.entities2.Trade;
 import net.teamio.gtams.client.entities2.TradeDescriptor;
 import net.teamio.gtams.client.entities2.TradeInfo;
-import net.teamio.gtams.client.entities2.TradeTerminal;
 import net.teamio.gtams.gui.ContainerTraderTE.SlotChangeListener;
 
 public class GuiTraderTE extends GuiContainer {
@@ -363,7 +362,7 @@ public class GuiTraderTE extends GuiContainer {
 //			btnCreateTrade.enabled = false;
 //		}
 
-		TradeTerminal terminal = container.trader.getTerminal();
+//		TradeTerminal terminal = container.trader.terminal;
 		badgeDebug.hover.clear();
 		badgeDebug.hover.add("Debug Info");
 //		badgeDebug.hover.add("Terminal ID (defined): " + container.trader.terminalId);

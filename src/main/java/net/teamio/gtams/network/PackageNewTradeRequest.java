@@ -26,7 +26,7 @@ public class PackageNewTradeRequest implements IMessage {
 			PackageTerminalData response;
 			if (container instanceof ContainerTraderTE) {
 				ContainerTraderTE ctte = (ContainerTraderTE) container;
-				TradeTerminal terminal = ctte.trader.getTerminal();
+				TradeTerminal terminal = ctte.trader.terminal;
 				TradeList tl = GTams.gtamsClient.createTrade(terminal, message.trade);
 				GoodsList gl = GTams.gtamsClient.getGoods(terminal);
 

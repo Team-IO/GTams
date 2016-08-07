@@ -47,7 +47,7 @@ public class TaskRefreshTerminal extends Task {
 	public void process() throws GTamsException {
 		int retryCount = 0;
 		do {
-			terminal = tileEntity.getTerminal();
+			terminal = tileEntity.terminal;
 			retryCount++;
 		} while(terminal == null && retryCount < 50);
 		if(terminal == null) {
@@ -120,7 +120,7 @@ public class TaskRefreshTerminal extends Task {
 			 * Actually add the removed goods to the inventory
 			 */
 
-			step = 2;
+			step = 3;
 			waitForSync();
 		}
 
