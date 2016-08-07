@@ -33,6 +33,7 @@ public class GTams {
 	public static GTamsCommonProxy proxy;
 
 	public static TraderBlock blockTrader;
+	public static ItemBlock itemTrader;
 	public static SimpleNetworkWrapper channel;
 	public static GTamsClientConnected gtamsClient;
 
@@ -54,17 +55,20 @@ public class GTams {
 		blockTrader.setUnlocalizedName("gtams.trader");
 		blockTrader.setCreativeTab(creativeTab);
 		GameRegistry.register(blockTrader);
-		ItemBlock itemTrader = new ItemBlock(blockTrader);
+		itemTrader = new ItemBlock(blockTrader);
 		itemTrader.setRegistryName(MODID, "trader");
 		itemTrader.setUnlocalizedName("gtams.trader");
 		itemTrader.setCreativeTab(creativeTab);
 		GameRegistry.register(itemTrader);
 
 		GameRegistry.registerTileEntity(TraderTE.class, "gtams.trader");
+
 	}
 
 	@EventHandler
 	public void init(FMLInitializationEvent event) {
+		proxy.registerRenderStuff();
+
 		gtamsClient = new GTamsClientConnected(Config.server_host, Config.server_port);
 		try {
 			gtamsClient.authenticate();

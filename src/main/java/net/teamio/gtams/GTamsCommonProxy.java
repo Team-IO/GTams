@@ -4,11 +4,14 @@ import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.teamio.gtams.network.PackageNewTradeRequest;
 import net.teamio.gtams.network.PackageTerminalData;
+import net.teamio.gtams.network.PackageTerminalDataRequest;
 import net.teamio.gtams.network.PackageTradeInfo;
 import net.teamio.gtams.network.PackageTradeInfoRequest;
-import net.teamio.gtams.network.PackageTerminalDataRequest;
 
 public abstract class GTamsCommonProxy {
+
+	public void registerRenderStuff() {
+	}
 
 	public void registerPackets(SimpleNetworkWrapper network) {
 		network.registerMessage(PackageTerminalData.HandlerServer.class, PackageTerminalDataRequest.class, 1, Side.SERVER);

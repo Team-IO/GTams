@@ -10,20 +10,18 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.teamio.gtams.GTams;
 
 public class TraderBlock extends Block {
 
-	public TraderBlock() {
-		super(Material.IRON);
-		// TODO Auto-generated constructor stub
-	}
+	public static AxisAlignedBB bounds = new AxisAlignedBB(0, 0, 0, 1, 1 + 2/16f, 1);
 
-	public TraderBlock(Material blockMaterialIn, MapColor blockMapColorIn) {
-		super(blockMaterialIn, blockMapColorIn);
-		// TODO Auto-generated constructor stub
+	public TraderBlock() {
+		super(Material.IRON, MapColor.BLUE);
 	}
 
 	@Override
@@ -34,6 +32,16 @@ public class TraderBlock extends Block {
 	@Override
 	public TileEntity createTileEntity(World world, IBlockState state) {
 		return new TraderTE();
+	}
+
+	@Override
+	public boolean isOpaqueCube(IBlockState state) {
+		return false;
+	}
+
+	@Override
+	public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos) {
+		return bounds;
 	}
 
 	@Override
