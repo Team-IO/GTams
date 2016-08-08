@@ -14,6 +14,9 @@ public class Config {
 
 	private static String client_token;
 
+	public static boolean snooping = true;
+	public static boolean transmit_username = true;
+
 	public static String server_host = "localhost";
 	public static int server_port = 60405;
 
@@ -46,6 +49,8 @@ public class Config {
 	public static void loadConfig() {
 		server_host = config.getString("server_host", "general", "gtams.team-io.net", "Connection info, where to find the GTams Server to use. Defaults to the public Team I/O server.");
 		server_port = config.getInt("server_port", "general", 60405, 1, 65535, "Connection info, on which port the GTams Server responds.");
+		snooping = config.getBoolean("snooping", "general", true, "Allow collecting of (anonymous) data about your installation. Not required for this mod to function properly. We just like to know stuff :P");
+		transmit_username = config.getBoolean("transmit_username", "general", true, "Allow transmission of usernames when notifying online presence. Not required for this mod to function properly, but very handy for assisting you if there is trouble.");
 
 		config.save();
 	}

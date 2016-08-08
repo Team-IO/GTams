@@ -27,12 +27,18 @@ public class PackageNewTradeRequest implements IMessage {
 			if (container instanceof ContainerTraderTE) {
 				ContainerTraderTE ctte = (ContainerTraderTE) container;
 				TradeTerminal terminal = ctte.trader.terminal;
-				TradeList tl = GTams.gtamsClient.createTrade(terminal, message.trade);
-				GoodsList gl = GTams.gtamsClient.getGoods(terminal);
+				TradeList tl = GTams.gtamsClient.createTrade(ctte.trader.terminalId, message.trade);
+				GoodsList gl = GTams.gtamsClient.getGoods(ctte.trader.terminalId, ctte.trader.ownerId);
 
 				Player playerInfo = null;
 				if(terminal.owner != null) {
 					playerInfo = GTams.gtamsClient.getOwner(terminal.owner.id);
+				}
+				if(tl == null) {
+					tl = new TradeList();
+				}
+				if(gl == null) {
+					gl = new GoodsList();
 				}
 				response = new PackageTerminalData(tl.trades, gl.goods, playerInfo);
 			} else {

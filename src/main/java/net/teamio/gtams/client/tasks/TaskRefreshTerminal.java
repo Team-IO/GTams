@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.UUID;
 
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.items.ItemStackHandler;
@@ -53,9 +54,12 @@ public class TaskRefreshTerminal extends Task {
 		if(terminal == null) {
 			throw new GTamsException("Could not get terminal");
 		}
+		UUID terminalId = tileEntity.terminalId;
+		UUID ownerId = tileEntity.ownerId;
+
 		//TODO: only refresh when updated?
-		goodsCache = GTams.gtamsClient.getGoods(terminal);
-		tradesCache = GTams.gtamsClient.getTrades(terminal);
+		goodsCache = GTams.gtamsClient.getGoods(terminalId, ownerId);
+		tradesCache = GTams.gtamsClient.getTrades(terminalId, ownerId);
 
 		if(goodsCache == null || tradesCache == null) {
 			//TODO: what to do?
@@ -96,7 +100,7 @@ public class TaskRefreshTerminal extends Task {
 			/*
 			 * Send goods to server
 			 */
-			GTams.gtamsClient.addGoods(terminal, gl);
+			GTams.gtamsClient.addGoods(terminalId, gl);
 			gl.goods.clear();
 		}
 
@@ -114,7 +118,7 @@ public class TaskRefreshTerminal extends Task {
 			/*
 			 * Request removal from the server
 			 */
-			transferFromServer = GTams.gtamsClient.removeGoods(terminal, transferFromServer);
+			transferFromServer = GTams.gtamsClient.removeGoods(terminalId, transferFromServer);
 
 			/*
 			 * Actually add the removed goods to the inventory

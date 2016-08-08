@@ -16,7 +16,6 @@ import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.oredict.ShapedOreRecipe;
 import net.teamio.gtams.client.GTamsClientConnected;
-import net.teamio.gtams.client.GTamsException;
 import net.teamio.gtams.content.TraderBlock;
 import net.teamio.gtams.content.TraderTE;
 import net.teamio.gtams.gui.GuiHandler;
@@ -77,12 +76,7 @@ public class GTams {
 		registerRecipes();
 
 		gtamsClient = new GTamsClientConnected(Config.server_host, Config.server_port);
-		try {
-			gtamsClient.authenticate();
-		} catch (GTamsException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		gtamsClient.authenticate();
 
 		NetworkRegistry.INSTANCE.registerGuiHandler(this, new GuiHandler());
 		channel = NetworkRegistry.INSTANCE.newSimpleChannel(CHANNEL_NAME);

@@ -1,6 +1,7 @@
 package net.teamio.gtams.network;
 
 import java.util.ArrayList;
+import java.util.UUID;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
@@ -17,7 +18,6 @@ import net.teamio.gtams.client.entities2.Player;
 import net.teamio.gtams.client.entities2.Trade;
 import net.teamio.gtams.client.entities2.TradeDescriptor;
 import net.teamio.gtams.client.entities2.TradeList;
-import net.teamio.gtams.client.entities2.TradeTerminal;
 import net.teamio.gtams.gui.ContainerTraderTE;
 
 public class PackageTerminalData implements IMessage {
@@ -29,27 +29,25 @@ public class PackageTerminalData implements IMessage {
 			Container container = ctx.getServerHandler().playerEntity.openContainer;
 			if (container instanceof ContainerTraderTE) {
 				ContainerTraderTE ctte = (ContainerTraderTE) container;
-				TradeTerminal terminal = ctte.trader.terminal;
 
-				if(terminal == null) {
-					return new PackageTerminalData();
-				}
+				UUID terminalId = ctte.trader.terminalId;
+				UUID ownerId = ctte.trader.ownerId;
 
 				TradeList tl = ctte.trader.tradesCache;
 				if (tl == null)
-					tl = GTams.gtamsClient.getTrades(terminal);
+					tl = GTams.gtamsClient.getTrades(terminalId, ownerId);
 				if (tl == null)
 					tl = new TradeList();
 
 				GoodsList gl = ctte.trader.goodsCache;
 				if (gl == null)
-					gl = GTams.gtamsClient.getGoods(terminal);
+					gl = GTams.gtamsClient.getGoods(terminalId, ownerId);
 				if (gl == null)
 					gl = new GoodsList();
 
 				Player playerInfo = null;
-				if(terminal.owner != null) {
-					playerInfo = GTams.gtamsClient.getOwner(terminal.owner.id);
+				if(ownerId != null) {
+					playerInfo = GTams.gtamsClient.getOwner(ownerId);
 				}
 
 				return new PackageTerminalData(tl.trades, gl.goods, playerInfo);

@@ -2,6 +2,7 @@ package net.teamio.gtams.client;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.util.UUID;
 
 import org.apache.http.HttpClientConnection;
 import org.apache.http.HttpEntity;
@@ -20,10 +21,15 @@ import org.apache.http.util.EntityUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.mojang.authlib.GameProfile;
 
+import net.minecraft.server.MinecraftServer;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.teamio.gtams.Config;
 import net.teamio.gtams.client.entities.EAuthenticate;
+import net.teamio.gtams.client.entities.EAuthenticateRequest;
 import net.teamio.gtams.client.entities.EPlayerData;
+import net.teamio.gtams.client.entities.EPlayerStatusRequest;
 import net.teamio.gtams.client.entities.ETerminalCreateNew;
 import net.teamio.gtams.client.entities.ETerminalCreateTrade;
 import net.teamio.gtams.client.entities.ETerminalData;
@@ -186,12 +192,17 @@ public class GTamsClientConnected extends GTamsClient {
 		}
 	}
 
-	public void authenticate() throws GTamsException {
+	public void authenticate() {
 		addTask(new Task() {
 
 			@Override
 			public void process() throws GTamsException {
-				if(Config.getClientToken().isEmpty()) {
+				if(Config.snooping) {
+					// Send instance information
+					EAuthenticate ent = doRequestPOST(EAuthenticate.class, EP_AUTHENTICATE, new EAuthenticateRequest());
+					Config.setClientToken(ent.token);
+				} else if(Config.getClientToken().isEmpty()) {
+					// Only fetch a token ONCE, then never again
 					EAuthenticate ent = doRequestGET(EAuthenticate.class, EP_AUTHENTICATE);
 					Config.setClientToken(ent.token);
 				}
@@ -235,7 +246,7 @@ public class GTamsClientConnected extends GTamsClient {
 				ent = doRequestPOST(ETerminalData.class, EP_TERMINAL_NEW, new ETerminalCreateNew(terminal.owner.id));
 				terminal.id = ent.id;
 				if(!terminal.isOnline) {
-					destroyTerminal(terminal);
+					destroyTerminal(terminal.id, terminal.getOwnerId());
 				}
 			} catch (GTamsException e) {
 				// TODO Auto-generated catch block
@@ -245,10 +256,10 @@ public class GTamsClientConnected extends GTamsClient {
 	}
 
 	@Override
-	public void destroyTerminal(TradeTerminal terminal) {
+	public void destroyTerminal(UUID terminalId, UUID ownerId) {
 		synchronized (sync_object) {
 			try {
-				doRequestPOST(Void.class, EP_TERMINAL_DESTROY, new ETerminalData(terminal.id, terminal.getOwnerId(), false));
+				doRequestPOST(Void.class, EP_TERMINAL_DESTROY, new ETerminalData(terminalId, ownerId, false));
 			} catch (GTamsException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -259,7 +270,14 @@ public class GTamsClientConnected extends GTamsClient {
 	@Override
 	public void notifyClientOffline(Owner owner) {
 		try {
-			doRequestPOST(Void.class, EP_PLAYER_STATUS, new EPlayerData(owner.id, false));
+			String playerName = null;
+			if(Config.transmit_username) {
+				MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
+				GameProfile prof = server.getPlayerProfileCache().getProfileByUUID(owner.id);
+				owner.name = prof.getName();
+				playerName = owner.name;
+			}
+			doRequestPOST(Void.class, EP_PLAYER_STATUS, new EPlayerStatusRequest(owner.id, playerName, false));
 		} catch (GTamsException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -269,7 +287,14 @@ public class GTamsClientConnected extends GTamsClient {
 	@Override
 	public void notifyClientOnline(Owner owner) {
 		try {
-			doRequestPOST(Void.class, EP_PLAYER_STATUS, new EPlayerData(owner.id, true));
+			String playerName = null;
+			if(Config.transmit_username) {
+				MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
+				GameProfile prof = server.getPlayerProfileCache().getProfileByUUID(owner.id);
+				owner.name = prof.getName();
+				playerName = owner.name;
+			}
+			doRequestPOST(Void.class, EP_PLAYER_STATUS, new EPlayerStatusRequest(owner.id, playerName, true));
 		} catch (GTamsException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -290,10 +315,10 @@ public class GTamsClientConnected extends GTamsClient {
 	}
 
 	@Override
-	public void changeTerminalOwner(TradeTerminal tradeTerminal, Owner newOwner) {
+	public void changeTerminalOwner(UUID terminalId, UUID newOwnerId) {
 		//TODO: what to do with not fully registered terminals? id == null!
 		try {
-			doRequestPOST(Void.class, EP_TERMINAL_OWNER, new ETerminalOwner(tradeTerminal.id, newOwner.id));
+			doRequestPOST(Void.class, EP_TERMINAL_OWNER, new ETerminalOwner(terminalId, newOwnerId));
 		} catch (GTamsException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -313,12 +338,10 @@ public class GTamsClientConnected extends GTamsClient {
 	}
 
 	@Override
-	public TradeList getTrades(TradeTerminal terminal) {
+	public TradeList getTrades(UUID terminalId, UUID ownerId) {
 		TradeList tl = null;
 		try {
-			if(terminal != null) {
-				tl = doRequestPOST(TradeList.class, EP_TERMINAL_TRADES, new ETerminalData(terminal.id, terminal.getOwnerId(), true));
-			}
+			tl = doRequestPOST(TradeList.class, EP_TERMINAL_TRADES, new ETerminalData(terminalId, ownerId, true));
 		} catch (GTamsException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -327,10 +350,10 @@ public class GTamsClientConnected extends GTamsClient {
 	}
 
 	@Override
-	public TradeList createTrade(TradeTerminal terminal, Trade trade) {
+	public TradeList createTrade(UUID terminalId, Trade trade) {
 		TradeList tl = null;
 		try {
-			tl = doRequestPOST(TradeList.class, EP_TERMINAL_TRADES_ADD, new ETerminalCreateTrade(terminal.id, trade));
+			tl = doRequestPOST(TradeList.class, EP_TERMINAL_TRADES_ADD, new ETerminalCreateTrade(terminalId, trade));
 		} catch (GTamsException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -339,10 +362,10 @@ public class GTamsClientConnected extends GTamsClient {
 	}
 
 	@Override
-	public TradeList removeTrade(TradeTerminal terminal, long tradeId) {
+	public TradeList removeTrade(UUID terminalId, long tradeId) {
 		TradeList tl = null;
 		try {
-			tl = doRequestPOST(TradeList.class, EP_TERMINAL_TRADES_ADD, new ETerminalDeleteTrade(terminal.id, tradeId));
+			tl = doRequestPOST(TradeList.class, EP_TERMINAL_TRADES_ADD, new ETerminalDeleteTrade(terminalId, tradeId));
 		} catch (GTamsException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -351,10 +374,10 @@ public class GTamsClientConnected extends GTamsClient {
 	}
 
 	@Override
-	public GoodsList getGoods(TradeTerminal terminal) {
+	public GoodsList getGoods(UUID terminalId, UUID ownerId) {
 		GoodsList gl = null;
 		try {
-			gl = doRequestPOST(GoodsList.class, EP_TERMINAL_GOODS, new ETerminalData(terminal.id, terminal.getOwnerId(), true));
+			gl = doRequestPOST(GoodsList.class, EP_TERMINAL_GOODS, new ETerminalData(terminalId, ownerId, true));
 		} catch (GTamsException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -363,10 +386,10 @@ public class GTamsClientConnected extends GTamsClient {
 	}
 
 	@Override
-	public GoodsList addGoods(TradeTerminal terminal, GoodsList request) {
+	public GoodsList addGoods(UUID terminalId, GoodsList request) {
 		GoodsList gl = null;
 		try {
-			gl = doRequestPOST(GoodsList.class, EP_TERMINAL_GOODS_ADD, new ETerminalGoodsData(terminal.id, request.goods));
+			gl = doRequestPOST(GoodsList.class, EP_TERMINAL_GOODS_ADD, new ETerminalGoodsData(terminalId, request.goods));
 		} catch (GTamsException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -375,10 +398,10 @@ public class GTamsClientConnected extends GTamsClient {
 	}
 
 	@Override
-	public GoodsList removeGoods(TradeTerminal terminal, GoodsList request) {
+	public GoodsList removeGoods(UUID terminalId, GoodsList request) {
 		GoodsList gl = null;
 		try {
-			gl = doRequestPOST(GoodsList.class, EP_TERMINAL_GOODS_REMOVE, new ETerminalGoodsData(terminal.id, request.goods));
+			gl = doRequestPOST(GoodsList.class, EP_TERMINAL_GOODS_REMOVE, new ETerminalGoodsData(terminalId, request.goods));
 		} catch (GTamsException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

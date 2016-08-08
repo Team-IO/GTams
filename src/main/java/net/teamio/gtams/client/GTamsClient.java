@@ -73,25 +73,25 @@ public abstract class GTamsClient {
 	 * Removes a terminal from the list, deleting all related trades.
 	 * @param terminal
 	 */
-	public abstract void destroyTerminal(TradeTerminal terminal);
+	public abstract void destroyTerminal(UUID terminalId, UUID ownerId);
 
 	public abstract void notifyClientOffline(Owner owner);
 
 	public abstract void notifyClientOnline(Owner owner);
 
-	public abstract void changeTerminalOwner(TradeTerminal tradeTerminal, Owner newOwner);
+	public abstract void changeTerminalOwner(UUID terminalId, UUID newOwnerId);
 
-	public abstract TradeList getTrades(TradeTerminal terminal);
+	public abstract TradeList getTrades(UUID terminalId, UUID ownerId);
 
-	public abstract TradeList createTrade(TradeTerminal terminal, Trade trade);
+	public abstract TradeList createTrade(UUID terminalId, Trade trade);
 
-	public abstract TradeList removeTrade(TradeTerminal terminal, long tradeId);
+	public abstract TradeList removeTrade(UUID terminalId, long tradeId);
 
-	public abstract GoodsList getGoods(TradeTerminal terminal);
+	public abstract GoodsList getGoods(UUID terminalId, UUID ownerId);
 
-	public abstract GoodsList addGoods(TradeTerminal terminal, GoodsList gl);
+	public abstract GoodsList addGoods(UUID terminalId, GoodsList gl);
 
-	public abstract GoodsList removeGoods(TradeTerminal terminal, GoodsList request);
+	public abstract GoodsList removeGoods(UUID terminalId, GoodsList request);
 
 	public abstract void updateOwnerInfo(Owner owner);
 

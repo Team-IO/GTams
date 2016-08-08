@@ -23,7 +23,7 @@ public class TradeTerminal {
 			owner.removeTerminal(this);
 			this.owner = newOwner;
 			newOwner.addTerminal(this);
-			owner.client.changeTerminalOwner(this, newOwner);
+			owner.client.changeTerminalOwner(id, newOwner.id);
 		}
 	}
 
