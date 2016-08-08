@@ -22,6 +22,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.client.GuiScrollingList;
 import net.minecraftforge.fml.client.config.GuiCheckBox;
+import net.teamio.gtams.Config;
 import net.teamio.gtams.client.entities2.Goods;
 import net.teamio.gtams.client.entities2.Mode;
 import net.teamio.gtams.client.entities2.Trade;
@@ -537,15 +538,21 @@ public class GuiTraderTE extends GuiContainer {
 		if(container.playerInfo != null) {
 			String text;
 			int txtWidth;
-			if(this.mc.thePlayer.getPersistentID().equals(container.playerInfo.id)) {
+			boolean isYourTerminal = this.mc.thePlayer.getPersistentID().equals(container.playerInfo.id);
+
+			badgeFunds.visible = isYourTerminal;
+			isYourTerminal = isYourTerminal || Config.showAllFunds;
+			if(isYourTerminal) {
 				text = Long.toString(container.playerInfo.funds);
 				txtWidth = fontRendererObj.getStringWidth(text);
 				drawString(fontRendererObj, text, guiLeft + 18, guiTop + 6, 0xFFFFFF);
+			}
+
+			isYourTerminal = this.mc.thePlayer.getPersistentID().equals(container.playerInfo.id);
+			if(isYourTerminal) {
 				text = "This terminal belongs to you.";
-				badgeFunds.visible = true;
 			} else {
 				text = "Owner: " + container.playerInfo.name;
-				badgeFunds.visible = false;
 			}
 			txtWidth = fontRendererObj.getStringWidth(text);
 			drawString(fontRendererObj, text, guiLeft + 256 - txtWidth - 8, guiTop + 162, 0xFFFFFF);

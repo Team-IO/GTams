@@ -19,6 +19,7 @@ public class Config {
 
 	public static String server_host = "localhost";
 	public static int server_port = 60405;
+	public static boolean showAllFunds;
 
 
 	public static void loadConfig(File file, File configDir) {
@@ -51,6 +52,7 @@ public class Config {
 		server_port = config.getInt("server_port", "general", 60405, 1, 65535, "Connection info, on which port the GTams Server responds.");
 		snooping = config.getBoolean("snooping", "general", true, "Allow collecting of (anonymous) data about your installation. Not required for this mod to function properly. We just like to know stuff :P");
 		transmit_username = config.getBoolean("transmit_username", "general", true, "Allow transmission of usernames when notifying online presence. Not required for this mod to function properly, but very handy for assisting you if there is trouble.");
+		showAllFunds = config.getBoolean("show_all_funds", "general", true, "Show funds regardless if you are the owner of the terminal.");
 
 		config.save();
 	}
