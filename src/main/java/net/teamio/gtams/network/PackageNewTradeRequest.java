@@ -13,7 +13,6 @@ import net.teamio.gtams.client.entities2.Player;
 import net.teamio.gtams.client.entities2.Trade;
 import net.teamio.gtams.client.entities2.TradeDescriptor;
 import net.teamio.gtams.client.entities2.TradeList;
-import net.teamio.gtams.client.entities2.TradeTerminal;
 import net.teamio.gtams.gui.ContainerTraderTE;
 
 public class PackageNewTradeRequest implements IMessage {
@@ -26,13 +25,12 @@ public class PackageNewTradeRequest implements IMessage {
 			PackageTerminalData response;
 			if (container instanceof ContainerTraderTE) {
 				ContainerTraderTE ctte = (ContainerTraderTE) container;
-				TradeTerminal terminal = ctte.trader.terminal;
 				TradeList tl = GTams.gtamsClient.createTrade(ctte.trader.terminalId, message.trade);
 				GoodsList gl = GTams.gtamsClient.getGoods(ctte.trader.terminalId, ctte.trader.ownerId);
 
 				Player playerInfo = null;
-				if(terminal.owner != null) {
-					playerInfo = GTams.gtamsClient.getOwner(terminal.owner.id);
+				if(ctte.trader.ownerId != null) {
+					playerInfo = GTams.gtamsClient.getOwner(ctte.trader.ownerId);
 				}
 				if(tl == null) {
 					tl = new TradeList();

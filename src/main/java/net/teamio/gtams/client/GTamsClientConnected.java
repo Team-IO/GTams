@@ -149,7 +149,7 @@ public class GTamsClientConnected extends GTamsClient {
 					return null;
 				}
 				String responseString = EntityUtils.toString(entity);
-				System.out.println("Response from server: " + responseString);
+//				System.out.println("Response from server: " + responseString);
 				return gson.fromJson(responseString, responseEntity);
 			} catch (HttpException e) {
 				throw new GTamsException("Error processing HTTP response", e);
@@ -180,7 +180,7 @@ public class GTamsClientConnected extends GTamsClient {
 					return null;
 				}
 				String responseString = EntityUtils.toString(entity);
-				System.out.println("Response from server: " + responseString);
+//				System.out.println("Response from server: " + responseString);
 				return gson.fromJson(responseString, responseEntity);
 			} catch (HttpException e) {
 				throw new GTamsException("Error processing HTTP response", e);

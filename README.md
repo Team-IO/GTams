@@ -22,7 +22,8 @@ When you open the terminal, you will see something like this:
 
 On the top left, you can see your current funds. New players will receive 50 minecoins as a present. Your budget is specific to the GTams Server. If you log in to other minecraft servers connected to the same GTams Server, you will have the same funds.
 
-You can create new trades to buy or sell items. For this you will need (at the moment) at least one of the items you want to sell or buy.
+You can create new trades to buy or sell items. For this you will need (at the moment) at least one of the items you want to sell or buy.  
+Trading works across server boundaries!
 
 When you hover over the red warning sign you will see which information is still required to create a trade.
 ![Warning Sign](doc/trading_terminal_newtrade1.png)
@@ -45,7 +46,12 @@ Customer Terminal:
 Vendor Terminal:
 ![Vendor Terminal](doc/trading_terminal_newtrade7.png)
 
-**At the moment, recurring trades are not supported by the GTams Server application and will be treated as if set to 'Once'. Also, all trades allow partial fulfillment automatically.**
+**Trade Modes:**
+* Once: The trade will be removed after it was completed once.
+* Recurring: The trade will be re-issued after the specified time
+* Infinite: The trade will be re-issued immediately after processing and will continue as long as sufficient funds/goods are available.
+
+**At the moment, recurring trades are not supported by the GTams Server application and will be treated as if set to 'Infinite'. Also, all trades allow partial fulfillment automatically.**
 
 ## Trade matching
 
