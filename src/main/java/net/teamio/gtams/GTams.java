@@ -1,6 +1,7 @@
 package net.teamio.gtams;
 
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraftforge.common.MinecraftForge;
@@ -13,6 +14,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.common.registry.GameRegistry;
+import net.minecraftforge.oredict.ShapedOreRecipe;
 import net.teamio.gtams.client.GTamsClientConnected;
 import net.teamio.gtams.client.GTamsException;
 import net.teamio.gtams.content.TraderBlock;
@@ -72,6 +74,8 @@ public class GTams {
 	public void init(FMLInitializationEvent event) {
 		proxy.registerRenderStuff();
 
+		registerRecipes();
+
 		gtamsClient = new GTamsClientConnected(Config.server_host, Config.server_port);
 		try {
 			gtamsClient.authenticate();
@@ -83,5 +87,14 @@ public class GTams {
 		NetworkRegistry.INSTANCE.registerGuiHandler(this, new GuiHandler());
 		channel = NetworkRegistry.INSTANCE.newSimpleChannel(CHANNEL_NAME);
 		proxy.registerPackets(channel);
+	}
+
+	private void registerRecipes() {
+		GameRegistry.addRecipe(new ShapedOreRecipe(itemTrader, "IGI", "EO ", "SSS",
+				'I', "ingotIron",
+				'G', "paneGlass",
+				'E', "chestEnder",
+				'O', "obsidian",
+				'S', Blocks.STONE_SLAB));
 	}
 }
