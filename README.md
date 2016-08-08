@@ -1,4 +1,4 @@
-# GTams - GLobal Trading and Marketing System
+# ![Logo](doc/logo.png) GTams - GLobal Trading and Marketing System
 
 The Modding Trials Entry
 
