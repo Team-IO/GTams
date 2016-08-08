@@ -9,6 +9,8 @@ public class Trade {
 	public int stopAfter;
 	public Mode mode = Mode.Once;
 	public int amount;
+	public boolean allowPartialFulfillment = true;
+
 
 	/**
 	 * @param itemName
@@ -25,21 +27,22 @@ public class Trade {
 
 	@Override
 	public String toString() {
-		return (isBuy ? "Buy " : "Sell ") + amount + "x" + descriptor + " for " + price + " " + (mode == Mode.Recurring ? " every " + interval + " seconds " + stopAfter + " times." : mode);
+		return (isBuy ? "Buy " : "Sell ") + amount + (allowPartialFulfillment ? "(P)" : "") + "x" + descriptor + " for " + price + " " + (mode == Mode.Recurring ? " every " + interval + " seconds " + stopAfter + " times." : mode);
 	}
 
 	public String toDisplayString() {
 		String buyOrSell = isBuy ? "Buy" : "Sell";
-		String templateA = "%s Amount: %d Price: %d %s";
-		String templateB = "%s Amount: %d Price: %d Every %d seconds.";
-		String templateC = "%s Amount: %d Price: %d Every %d seconds, %d times.";
+		String partial = allowPartialFulfillment ? "(P)" : "";
+		String templateA = "%s Amount: %d %s Price: %d %s";
+		String templateB = "%s Amount: %d %s Price: %d Every %d seconds.";
+		String templateC = "%s Amount: %d %s Price: %d Every %d seconds, %d times.";
 
 		if(mode == Mode.Recurring) {
 			if(stopAfter > 0) {
-				return String.format(templateB, buyOrSell, amount, price, interval);
+				return String.format(templateB, buyOrSell, amount, partial, price, interval);
 			}
-			return String.format(templateC, buyOrSell, amount, price, interval, stopAfter);
+			return String.format(templateC, buyOrSell, amount, partial, price, interval, stopAfter);
 		}
-		return String.format(templateA, buyOrSell, amount, price, mode);
+		return String.format(templateA, buyOrSell, amount, partial, price, mode);
 	}
 }

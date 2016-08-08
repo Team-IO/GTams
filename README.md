@@ -51,7 +51,7 @@ Vendor Terminal:
 * Recurring: The trade will be re-issued after the specified time
 * Infinite: The trade will be re-issued immediately after processing and will continue as long as sufficient funds/goods are available.
 
-**At the moment, recurring trades are not supported by the GTams Server application and will be treated as if set to 'Infinite'. Also, all trades allow partial fulfillment automatically.**
+**At the moment, recurring trades are not supported by the GTams Server application and will be treated as if set to 'Infinite'.**
 
 ## Trade matching
 

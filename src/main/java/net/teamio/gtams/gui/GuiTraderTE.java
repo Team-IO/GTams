@@ -177,6 +177,7 @@ public class GuiTraderTE extends GuiContainer {
 
 	private static final int CB_BUY = 6001;
 	private static final int CB_SELL = 6002;
+	private static final int CB_PARTIAL = 6003;
 
 	private final ContainerTraderTE container;
 
@@ -201,6 +202,7 @@ public class GuiTraderTE extends GuiContainer {
 	private ItemStack tradeStack;
 	private Mode mode = Mode.Once;
 	private boolean isBuy;
+	private boolean allowPartial = true;
 	private int price;
 	private int amount = 1;
 	private int interval = 1;
@@ -212,6 +214,7 @@ public class GuiTraderTE extends GuiContainer {
 	private int refreshTicker;
 	private Badge badgeFunds;
 	private Badge badgeDebug;
+	private GuiCheckBox cbPartial;
 
 	public GuiTraderTE(ContainerTraderTE conta) {
 		super(conta);
@@ -278,8 +281,11 @@ public class GuiTraderTE extends GuiContainer {
 		cbBuy = new GuiCheckBox(CB_BUY, guiLeft + 10, guiTop + 135, "Buy", false);
 		cbSell = new GuiCheckBox(CB_SELL, guiLeft + 10, guiTop + 145, "Sell", true);
 
+		cbPartial = new GuiCheckBox(CB_PARTIAL, guiLeft + 10, guiTop + 125, "Allow Partial Fulfillment", true);
+
 		buttonList.add(cbBuy);
 		buttonList.add(cbSell);
+		buttonList.add(cbPartial);
 
 		int modeTop = 125;
 		int modeLeft = 150;
@@ -413,6 +419,7 @@ public class GuiTraderTE extends GuiContainer {
 			newTrade.descriptor = new TradeDescriptor(tradeStack);
 
 			newTrade.isBuy = isBuy;
+			newTrade.allowPartialFulfillment = allowPartial;
 			newTrade.price = price;
 			newTrade.mode = mode;
 			newTrade.interval = interval;
@@ -456,6 +463,8 @@ public class GuiTraderTE extends GuiContainer {
 		cbBuy.visible = isEditingTrade;
 		cbSell.enabled = isEditingTrade;
 		cbSell.visible = isEditingTrade;
+		cbPartial.enabled = isEditingTrade;
+		cbPartial.visible = isEditingTrade;
 
 		cbModeOnce.enabled = isEditingTrade && mode != Mode.Once;
 		cbModeOnce.visible = isEditingTrade;
@@ -472,6 +481,7 @@ public class GuiTraderTE extends GuiContainer {
 		 */
 
 		isBuy = cbBuy.isChecked();
+		allowPartial = cbPartial.isChecked();
 		this.price = txtPrice.getIntValue();
 		this.amount = txtAmount.getIntValue();
 		this.interval = txtInterval.getIntValue();

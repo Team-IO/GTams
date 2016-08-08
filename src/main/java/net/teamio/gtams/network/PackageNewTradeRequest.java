@@ -75,6 +75,7 @@ public class PackageNewTradeRequest implements IMessage {
 				}
 			}
 			trade.isBuy = packetBuffer.readBoolean();
+			trade.allowPartialFulfillment = packetBuffer.readBoolean();
 			trade.price = packetBuffer.readInt();
 			trade.amount = packetBuffer.readInt();
 			trade.interval = packetBuffer.readInt();
@@ -109,6 +110,7 @@ public class PackageNewTradeRequest implements IMessage {
 				}
 			}
 			packetBuffer.writeBoolean(trade.isBuy);
+			packetBuffer.writeBoolean(trade.allowPartialFulfillment);
 			packetBuffer.writeInt(trade.price);
 			packetBuffer.writeInt(trade.amount);
 			packetBuffer.writeInt(trade.interval);

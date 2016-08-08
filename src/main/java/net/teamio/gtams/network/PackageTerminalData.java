@@ -134,6 +134,7 @@ public class PackageTerminalData implements IMessage {
 					trade.descriptor.nbtHash = packetBuffer.readStringFromBuffer(255);
 				}
 				trade.isBuy = packetBuffer.readBoolean();
+				trade.allowPartialFulfillment = packetBuffer.readBoolean();
 				trade.price = packetBuffer.readInt();
 				trade.amount = packetBuffer.readInt();
 				trade.interval = packetBuffer.readInt();
@@ -193,6 +194,7 @@ public class PackageTerminalData implements IMessage {
 					packetBuffer.writeString(off.descriptor.nbtHash);
 				}
 				packetBuffer.writeBoolean(off.isBuy);
+				packetBuffer.writeBoolean(off.allowPartialFulfillment);
 				packetBuffer.writeInt(off.price);
 				packetBuffer.writeInt(off.amount);
 				packetBuffer.writeInt(off.interval);
