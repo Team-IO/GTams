@@ -540,8 +540,8 @@ public class GuiTraderTE extends GuiContainer {
 			int txtWidth;
 			boolean isYourTerminal = this.mc.thePlayer.getPersistentID().equals(container.playerInfo.id);
 
-			badgeFunds.visible = isYourTerminal;
 			isYourTerminal = isYourTerminal || Config.showAllFunds;
+			badgeFunds.visible = isYourTerminal;
 			if(isYourTerminal) {
 				text = Long.toString(container.playerInfo.funds);
 				txtWidth = fontRendererObj.getStringWidth(text);
