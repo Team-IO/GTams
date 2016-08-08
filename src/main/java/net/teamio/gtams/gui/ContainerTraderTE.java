@@ -106,6 +106,11 @@ public class ContainerTraderTE extends Container {
 		}
 	}
 
+	@Override
+	protected void retrySlotClick(int slotId, int clickedButton, boolean mode, EntityPlayer playerIn) {
+		//FIXME implement this!
+	}
+
 	public List<Trade> getTrades() {
 		return trades;
 	}
