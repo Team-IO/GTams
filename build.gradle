@@ -37,7 +37,21 @@ minecraft {
     mappings = "${config.forge_mappings}"
 }
 
+configurations {
+    shade
+    compile.extendsFrom shade
+}
+
 dependencies {
+    shade 'org.apache.httpcomponents:httpclient:4.3.3'
+}
+
+jar {
+    configurations.shade.each { dep ->
+        from(project.zipTree(dep)){
+            exclude 'META-INF', 'META-INF/**'
+        }
+    }
 }
 
 processResources
