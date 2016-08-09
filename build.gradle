@@ -46,6 +46,12 @@ dependencies {
     shade 'org.apache.httpcomponents:httpclient:4.3.3'
 }
 
+reobf{
+    jar{
+        extraLines "PK: org/apache net/teamio/shade/apache"
+    }
+}
+
 jar {
     configurations.shade.each { dep ->
         from(project.zipTree(dep)){
