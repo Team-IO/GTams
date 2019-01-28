@@ -43,7 +43,7 @@ configurations {
 }
 
 dependencies {
-    shade 'org.apache.httpcomponents:httpclient:4.3.3'
+    shade 'org.apache.httpcomponents:httpclient:4.5.7'
 }
 
 reobf{
